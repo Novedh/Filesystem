@@ -24,11 +24,47 @@
 #include "fsLow.h"
 #include "mfs.h"
 
+typedef struct VCB{
+	uint64_t signaturePt1;
+	uint64_t signaturePt2;
+	uint64_t rootStart;
+	uint64_t freeStart;
+};
 
 int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	{
 	printf ("Initializing File System with %ld blocks with a block size of %ld\n", numberOfBlocks, blockSize);
 	/* TODO: Add any code you need to initialize your file system. */
+	
+	struct VCB *vcb = malloc(blockSize);
+	LBAread(vcb, 1, 0);
+
+	if(vcb->signaturePt1== PART_SIGNATURE && vcb->signaturePt2== PART_SIGNATURE2){
+		printf("Volume already initialized! \n");
+		free(vcb);
+		return 0;
+	}
+
+	vcb->signaturePt1 == PART_SIGNATURE;
+	vcb->signaturePt2 == PART_SIGNATURE2;
+	vcb->freeStart = 1;
+	vcb->rootStart = 6;
+
+	LBAwrite(vcb,1,0);
+
+	free(vcb);
+
+	char *freeSpaceMap = malloc(5 * blockSize);
+
+	for (int i = 0; i < 6; i++)
+	{
+		freeSpaceMap[i] = 1;
+	}
+	memset(freeSpaceMap + 6, 0, 5 * blockSize - 6);
+
+
+	LBAwrite(freeSpaceMap, 5, 1);
+	vcb->freeStart = 1;
 
 	return 0;
 	}
