@@ -35,6 +35,8 @@ typedef struct VCB{
 	uint64_t rootStart;
 };
 
+// TODO: Define Directory Entry (DE) Struct
+
 int initFreeSpaceMap (uint64_t numberOfBlocks, uint64_t blockSize)
 	{
 	int bytesNeeded = (numberOfBlocks + 7) / 8;
@@ -51,6 +53,16 @@ int initFreeSpaceMap (uint64_t numberOfBlocks, uint64_t blockSize)
 	LBAwrite(freeSpaceMap, blocksNeeded, 1);
 	return 1;
 	}
+
+	// TODO: Write Allocate Space Function
+	// Input: num blocks requested
+	// MUST Update freeSpaceMap with blocks used and write it to disk.
+	// Return starting block number
+
+	// TODO BUT NOT REQUIRED FOR M1: Write release space function
+
+	// TODO: Write init rootDirectory
+	// Return starting block number of root directory
 
 int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	{
@@ -70,7 +82,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	vcb->numberOfBlocks = numberOfBlocks;
 	vcb->blockSize = blockSize;
 	vcb->freeStart = initFreeSpaceMap(numberOfBlocks, blockSize);
-	vcb->rootStart = 6;
+	vcb->rootStart = 6; // eventually replace with a initRootDirectory
 
 	LBAwrite(vcb,1,0);
 
