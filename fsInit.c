@@ -35,18 +35,20 @@ typedef struct VCB{
 	uint64_t rootStart;
 };
 
-int initFreeSpaceMap (uint64_t blockSize)
+int initFreeSpaceMap (uint64_t numberOfBlocks, uint64_t blockSize)
 	{
-	char *freeSpaceMap = malloc(5 * blockSize);
+	int bytesNeeded = (numberOfBlocks + 7) / 8;
+	int blocksNeeded = (bytesNeeded + (blockSize - 1)) / blockSize;
+	char *freeSpaceMap = malloc(blocksNeeded * blockSize);
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < blocksNeeded + 1; i++)
 	{
 		freeSpaceMap[i] = 1;
 	}
-	memset(freeSpaceMap + 6, 0, 5 * blockSize - 6);
+	memset(freeSpaceMap + (blocksNeeded + 1), 0, (blocksNeeded * blockSize) - (blocksNeeded + 1));
 
 
-	LBAwrite(freeSpaceMap, 5, 1);
+	LBAwrite(freeSpaceMap, blocksNeeded, 1);
 	return 1;
 	}
 
@@ -67,7 +69,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	vcb->signature = SIGNATURE;
 	vcb->numberOfBlocks = numberOfBlocks;
 	vcb->blockSize = blockSize;
-	vcb->freeStart = initFreeSpaceMap(blockSize);
+	vcb->freeStart = initFreeSpaceMap(numberOfBlocks, blockSize);
 	vcb->rootStart = 6;
 
 	LBAwrite(vcb,1,0);
