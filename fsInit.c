@@ -24,6 +24,9 @@
 #include "fsLow.h"
 #include "mfs.h"
 
+#define SIGNATURE1 0x353134435343 // CSC415
+#define SIGNATURE2 0x41444f4a // JODA
+
 typedef struct VCB{
 	uint64_t signaturePt1;
 	uint64_t signaturePt2;
@@ -39,14 +42,14 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	struct VCB *vcb = malloc(blockSize);
 	LBAread(vcb, 1, 0);
 
-	if(vcb->signaturePt1== PART_SIGNATURE && vcb->signaturePt2== PART_SIGNATURE2){
+	if(vcb->signaturePt1 == SIGNATURE1 && vcb->signaturePt2 == SIGNATURE2){
 		printf("Volume already initialized! \n");
 		free(vcb);
 		return 0;
 	}
 
-	vcb->signaturePt1 == PART_SIGNATURE;
-	vcb->signaturePt2 == PART_SIGNATURE2;
+	vcb->signaturePt1 = SIGNATURE1;
+	vcb->signaturePt2 = SIGNATURE2;
 	vcb->freeStart = 1;
 	vcb->rootStart = 6;
 
