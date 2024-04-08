@@ -84,10 +84,52 @@ int initFreeSpaceMap (uint64_t numberOfBlocks, uint64_t blockSize)
 	return blocksNeeded + 1;
 	}
 
-	// TODO: Write Allocate Space Function
-	// Input: num blocks requested
-	// MUST Update freeSpaceMap with blocks used and write it to disk.
-	// Return starting block number
+int allocateBlocks(uint64_t numBlocksRequested)
+	{
+	uint64_t startFreeBlock = -1;
+	uint64_t continuousFreeBlocks = 0;
+
+	for (int i = 0; i < vcb->numberOfBlocks; i++)
+	{
+		// Find a free block
+		if (getBit(i) == 0)
+		{	
+			// Track first free block in series
+			if (continuousFreeBlocks == 0)
+			{
+				startFreeBlock = i;
+			}
+			// Track number of free blocks in series
+			continuousFreeBlocks++;
+
+			// Found a series of free blocks that matches request
+			if (continuousFreeBlocks == numBlocksRequested)
+			{
+				// Update BitMap
+				for (int j = startFreeBlock; j < startFreeBlock + numBlocksRequested; j++)
+				{
+					setBit(j);
+				}
+
+				// Write updated Map to disk
+				LBAwrite(freeSpaceMap,vcb->freeStart - 1,1);
+				
+				// Return first free block in series
+				return startFreeBlock;
+			}
+			
+		}
+		// Reset Series
+		else
+		{
+			continuousFreeBlocks = 0;
+		}
+		
+	}
+	// Return -1, No free space to accomodate call
+	return -1;
+	
+	}
 
 	// TODO BUT NOT REQUIRED FOR M1: Write release space function
 
