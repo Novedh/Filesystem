@@ -37,21 +37,50 @@ typedef struct VCB{
 
 // TODO: Define Directory Entry (DE) Struct
 
+unsigned char * freeSpaceMap;
+
+void setBit(int blockNum)
+	{
+	int byteNum = blockNum / 8;
+	int bitNum = blockNum % 8;
+	freeSpaceMap[byteNum] = freeSpaceMap[byteNum] | (1 << bitNum);
+	}
+
+void clearBit(int blockNum)
+	{
+	int byteNum = blockNum / 8;
+	int bitNum = blockNum % 8;
+	freeSpaceMap[byteNum] = freeSpaceMap[byteNum] & (!(1 << bitNum));
+	}
+
+int getBit(int blockNum)
+	{
+	int byteNum = blockNum / 8;
+	int bitNum = blockNum % 8;
+	return ((freeSpaceMap[byteNum] >> bitNum) & 1);
+	}
+
 int initFreeSpaceMap (uint64_t numberOfBlocks, uint64_t blockSize)
 	{
 	int bytesNeeded = (numberOfBlocks + 7) / 8;
 	int blocksNeeded = (bytesNeeded + (blockSize - 1)) / blockSize;
-	char *freeSpaceMap = malloc(blocksNeeded * blockSize);
+	freeSpaceMap = (unsigned char*)malloc(blocksNeeded * blockSize);
 
-	for (int i = 0; i < blocksNeeded + 1; i++)
+	// Initialize freeSpaceMap to 0 ie all free
+	memset(freeSpaceMap, 0, blocksNeeded * blockSize);
+
+	// Set first bit as used for VCB
+	setBit(0);
+
+	// Set bits used for freeSpaceMap
+	for (int i = 1; i <= blocksNeeded; i++)
 	{
-		freeSpaceMap[i] = 1;
+	setBit(i);
 	}
-	memset(freeSpaceMap + (blocksNeeded + 1), 0, (blocksNeeded * blockSize) - (blocksNeeded + 1));
-
 
 	LBAwrite(freeSpaceMap, blocksNeeded, 1);
-	return 1;
+
+	return blocksNeeded + 1;
 	}
 
 	// TODO: Write Allocate Space Function
