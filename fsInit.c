@@ -38,6 +38,7 @@ typedef struct VCB{
 // TODO: Define Directory Entry (DE) Struct
 
 unsigned char * freeSpaceMap;
+struct VCB *vcb;
 
 void setBit(int blockNum)
 	{
@@ -98,7 +99,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	printf ("Initializing File System with %ld blocks with a block size of %ld\n", numberOfBlocks, blockSize);
 	/* TODO: Add any code you need to initialize your file system. */
 	
-	struct VCB *vcb = malloc(blockSize);
+	vcb = malloc(blockSize);
 	LBAread(vcb, 1, 0);
 
 	if(vcb->signature == SIGNATURE){
@@ -110,7 +111,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	vcb->signature = SIGNATURE;
 	vcb->numberOfBlocks = numberOfBlocks;
 	vcb->blockSize = blockSize;
-	vcb->freeStart = initFreeSpaceMap(numberOfBlocks, blockSize);
+	vcb->freeStart = initFreeSpaceMap(vcb->numberOfBlocks, vcb->blockSize);
 	vcb->rootStart = 6; // eventually replace with a initRootDirectory
 
 	LBAwrite(vcb,1,0);
