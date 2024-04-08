@@ -28,6 +28,7 @@
 #define SIGNATURE 0x41444f4a353134 // 415JODA
 #define MAX_FILENAME_LEN 255
 
+
 typedef struct VCB{
 	uint64_t signature;
 	uint64_t numberOfBlocks;
@@ -47,10 +48,11 @@ typedef struct DE
 	int loc;					 // represents the location of the file on the disk
 	unsigned int size;			 // represents the size of the file in bytes
 	unsigned int isDir;			 // 0 if it is a file, 1 if it is a directory
-};
+}DE;
 
 unsigned char * freeSpaceMap;
 struct VCB *vcb;
+
 
 void setBit(int blockNum)
 	{
@@ -146,6 +148,18 @@ int allocateBlocks(uint64_t numBlocksRequested)
 
 	// TODO: Write init rootDirectory
 	// Return starting block number of root directory
+int createDirectory(int numEntries, DE *parent){
+	DE *myDir = NULL;
+	int spaceNeeded = numEntries * sizeof(struct DE);
+	int blocksNeeded = (spaceNeeded + vcb->blockSize - 1) / vcb->blockSize;
+	int bytesNeeded = blocksNeeded * vcb->blockSize;
+	int actEntries = bytesNeeded / sizeof(struct DE);
+
+	myDir->loc = allocateBlocks(blocksNeeded);
+	struct DE *entries[actEntries];
+	myDir = malloc(bytesNeeded);
+
+}
 
 int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	{
@@ -170,8 +184,6 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	LBAwrite(vcb,1,0);
 
 	free(vcb);
-
-
 
 	return 0;
 	}
