@@ -149,13 +149,13 @@ int allocateBlocks(uint64_t numBlocksRequested)
 	// TODO: Write init rootDirectory
 	// Return starting block number of root directory
 int createDirectory(int numEntries, DE *parent){
-
+	printf("\n\nsize of DE: %d\n\n",sizeof(DE));
 	int spaceNeeded = numEntries * sizeof(DE);
 	int blocksNeeded = (spaceNeeded + vcb->blockSize - 1) / vcb->blockSize;
 	int bytesNeeded = blocksNeeded * vcb->blockSize;
 	int actEntries = bytesNeeded / sizeof(DE);
 	int loc = allocateBlocks(blocksNeeded);
-	DE *myDir = (DE *)malloc(actEntries * sizeof(DE));
+	DE *myDir = (DE *)malloc(bytesNeeded);
 
 	//empty name means unused DE
 	for(int i =2;i<actEntries;i++){
@@ -179,8 +179,9 @@ int createDirectory(int numEntries, DE *parent){
 	}
 
 	LBAwrite(myDir,6,loc);
+	free(myDir);
 
-	return 0;
+	return loc;
 
 }
 
@@ -202,7 +203,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	vcb->numberOfBlocks = numberOfBlocks;
 	vcb->blockSize = blockSize;
 	vcb->freeStart = initFreeSpaceMap(vcb->numberOfBlocks, vcb->blockSize);
-	vcb->rootStart = 6; // eventually replace with a initRootDirectory
+	vcb->rootStart = createDirectory(50,NULL); // eventually replace with a initRootDirectory
 
 	LBAwrite(vcb,1,0);
 
