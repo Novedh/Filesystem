@@ -149,15 +149,38 @@ int allocateBlocks(uint64_t numBlocksRequested)
 	// TODO: Write init rootDirectory
 	// Return starting block number of root directory
 int createDirectory(int numEntries, DE *parent){
-	DE *myDir = NULL;
-	int spaceNeeded = numEntries * sizeof(struct DE);
+
+	int spaceNeeded = numEntries * sizeof(DE);
 	int blocksNeeded = (spaceNeeded + vcb->blockSize - 1) / vcb->blockSize;
 	int bytesNeeded = blocksNeeded * vcb->blockSize;
-	int actEntries = bytesNeeded / sizeof(struct DE);
+	int actEntries = bytesNeeded / sizeof(DE);
+	int loc = allocateBlocks(blocksNeeded);
+	DE *myDir = (DE *)malloc(actEntries * sizeof(DE));
 
-	myDir->loc = allocateBlocks(blocksNeeded);
-	struct DE *entries[actEntries];
-	myDir = malloc(bytesNeeded);
+	//empty name means unused DE
+	for(int i =2;i<actEntries;i++){
+		strcpy(myDir[i].name, "");
+	}
+
+	strcpy(myDir[0].name, ".");
+	myDir[0].size = actEntries * sizeof(DE);
+	myDir[0].loc = loc;
+	myDir[0].isDir= 1 ;
+
+	strcpy(myDir[1].name, "..");
+	myDir[1].isDir = 1;
+	//if we are in root
+	if(parent == NULL){
+		myDir[1].loc = myDir[0].loc;
+		myDir[1].size = myDir[0].size;
+	}else{
+		myDir[1].loc = parent[0].loc;
+		myDir[1].size = parent[0].size;
+	}
+
+	LBAwrite(myDir,6,loc);
+
+	return 0;
 
 }
 
