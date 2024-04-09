@@ -1,9 +1,9 @@
 /**************************************************************
-* Class::  CSC-415-0# Spring 2024
-* Name::
-* Student IDs::
-* GitHub-Name::
-* Group-Name::
+* Class::  CSC-415-01 Spring 2024
+* Name:: James Dixon, Justin Hellweg, Devon Huang, Omar Thiongane
+* Student IDs:: 922440659, 922692586, 916940666, 922164097
+* GitHub-Name:: JD499, Jus1927, Novedh, ot409
+* Group-Name:: JODA
 * Project:: Basic File System
 *
 * File:: b_io.c
