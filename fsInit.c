@@ -35,7 +35,7 @@ typedef struct VCB{
 	uint64_t blockSize;
 	uint64_t freeStart;
 	uint64_t rootStart;
-};
+}VCB;
 
 // TODO: Define Directory Entry (DE) Struct
 typedef struct DE
@@ -149,7 +149,6 @@ int allocateBlocks(uint64_t numBlocksRequested)
 	// TODO: Write init rootDirectory
 	// Return starting block number of root directory
 int createDirectory(int numEntries, DE *parent){
-	printf("\n\nsize of DE: %d\n\n",sizeof(DE));
 	int spaceNeeded = numEntries * sizeof(DE);
 	int blocksNeeded = (spaceNeeded + vcb->blockSize - 1) / vcb->blockSize;
 	int bytesNeeded = blocksNeeded * vcb->blockSize;
