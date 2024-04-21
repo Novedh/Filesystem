@@ -19,6 +19,7 @@
 #include <string.h>
 #include "global.h"
 #include "fsDir.h"
+#include "mfs.h"
 
 //pointer to current directory stored in memory
 DE *root;
@@ -150,4 +151,43 @@ int parsePath(char *path, ppRetStruct *ppInfo){
     }
     
     
+}
+
+int findUnusedDE(DE *de)
+{
+    for (int i = 2; i < MAX_ENTRIES; i++)
+    {
+        if (strcmp(de[i].name, "") == 0)
+        {
+            return i;
+        }
+    }
+    return -1; // no free directory entries
+}
+
+void writeDir(DE *de){
+    if(de == NULL){
+        return;
+    }
+    int blockNum = de->loc;
+
+    LBAwrite(de,1,blockNum);
+
+}
+
+int fs_mkdir(const char *pathname, mode_t mode){
+    ppRetStruct ppInfo;
+    DE *res = parsePath(pathname,&ppInfo);
+    if(res == -1){
+        return -1;
+    }
+    if(ppInfo.lastElementIndex!=-1){
+        return -1;
+    }
+    DE *newDir = createDirectory(MAX_ENTRIES,ppInfo.Parent);
+    int index = findUnusedDE(ppInfo.Parent);
+    strcpy(ppInfo.Parent[index].name,ppInfo.lastElementName);
+    ppInfo.Parent[index].size = newDir[0].size;
+
+    writeDir(ppInfo.Parent);
 }
