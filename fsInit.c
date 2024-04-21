@@ -24,6 +24,7 @@
 
 #include "fsLow.h"
 #include "mfs.h"
+#include "fsDir.h"
 
 #define SIGNATURE 0x41444f4a353134 // 415JODA
 #define MAX_FILENAME_LEN 255
@@ -65,7 +66,7 @@ void clearBit(int blockNum)
 	{
 	int byteNum = blockNum / 8;
 	int bitNum = blockNum % 8;
-	freeSpaceMap[byteNum] = freeSpaceMap[byteNum] & (!(1 << bitNum));
+	freeSpaceMap[byteNum] = freeSpaceMap[byteNum] & ~(1 << bitNum);
 	}
 
 int getBit(int blockNum)
@@ -101,6 +102,7 @@ int allocateBlocks(uint64_t numBlocksRequested)
 	{
 	uint64_t startFreeBlock = -1;
 	uint64_t continuousFreeBlocks = 0;
+	
 
 	for (int i = 0; i < vcb->numberOfBlocks; i++)
 	{
@@ -145,6 +147,16 @@ int allocateBlocks(uint64_t numBlocksRequested)
 	}
 
 	// TODO BUT NOT REQUIRED FOR M1: Write release space function
+int freeBlocks(int index, int numBlocks){
+	LBAread(freeSpaceMap, vcb->freeStart - 1, 1);
+	if(index<1){
+		return -1;
+	}
+	for(int i = index; i < index + numBlocks ; i++){
+		clearBit(i);
+	}
+	LBAwrite(freeSpaceMap, vcb->freeStart, 1);
+}
 
 	// TODO: Write init rootDirectory
 	// Return starting block number of root directory
