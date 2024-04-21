@@ -6,20 +6,19 @@
  * Group-Name:: JODA
  * Project:: Basic File System
  *
- * File:: vcb.h
+ * File:: bitMap.h
  *
- * Description:: file with vcb structure
+ * Description::
  *
  **************************************************************/
 
-#include <stdint.h>
+#include "fsLow.h"
 
-typedef struct VCB
-{
-    uint64_t signature;
-    uint64_t numberOfBlocks;
-    uint64_t blockSize;
-    uint64_t freeStart;
-    uint64_t rootStart;
 
-} VCB;
+
+void setBit(int blockNum);
+void clearBit(int blockNum);
+int getBit(int blockNum);
+int initFreeSpaceMap(uint64_t numberOfBlocks, uint64_t blockSize);
+int allocateBlocks(uint64_t numBlocksRequested);
+int freeBlocks(int index, int numBlocks);

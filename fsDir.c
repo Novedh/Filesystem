@@ -17,14 +17,19 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
-
+#include "global.h"
 #include "fsDir.h"
 
+//pointer to current directory stored in memory
+DE *root;
+DE *cwd;
 
-DE * cwd;
+int blockSize;
 
-int createDirectory(int numEntries, DE *parent, VCB *vcb)
+
+int createDirectory(int numEntries, DE *parent)
 {
+    blockSize = vcb->blockSize;
     int spaceNeeded = numEntries * sizeof(DE);
     int blocksNeeded = (spaceNeeded + vcb->blockSize - 1) / vcb->blockSize;
     int bytesNeeded = blocksNeeded * vcb->blockSize;
@@ -50,6 +55,8 @@ int createDirectory(int numEntries, DE *parent, VCB *vcb)
     {
         myDir[1].loc = myDir[0].loc;
         myDir[1].size = myDir[0].size;
+        root = myDir;
+        cwd = myDir;
     }
     else
     {
@@ -63,6 +70,29 @@ int createDirectory(int numEntries, DE *parent, VCB *vcb)
     return loc;
 }
 
+
+int findInDir(DE *parent, char *string){
+    if(parent == NULL || string == NULL){
+        return -1;
+    }
+    for (int i = 0; i < MAX_ENTRIES;i++){
+        if (strcmp(parent[i].name, string) == 0){
+            return i;
+        }
+    }
+    return -1; //not found
+}
+
+DE *loadDir(DE *de){
+    if (de == NULL){
+        return NULL;
+    }
+    int blockNum = de->loc;
+    DE *dir = (DE*)malloc(blockSize);
+    LBAread(dir, 1,blockNum);
+    return dir;
+}
+
 int parsePath(char *path, ppRetStruct *ppInfo){
 
     if(path == NULL){
@@ -71,12 +101,14 @@ int parsePath(char *path, ppRetStruct *ppInfo){
     if(ppInfo == NULL){
         return 1;
     }
-    //absolute path
+    DE *startParent;
+    //means given absolute path
     if(path[0]=='/'){
-
+        startParent = root;
     }else{
-        
+        startParent = cwd;
     }
+    DE *parent = startParent;
 
     char *token = strtok(path,"/");
     if(token == NULL){
@@ -86,10 +118,36 @@ int parsePath(char *path, ppRetStruct *ppInfo){
         else{
             ppInfo->lastElementIndex=-2;
             ppInfo->lastElementName = NULL;
-            //ppInfo->Parent = parent;
+            ppInfo->Parent = parent;
             return 0;
         }
     }
-
-
+    while(1){
+        int index = findInDir(parent,token);
+        char *token2 = strtok(NULL,"/");
+        if (token2 == NULL)
+        {
+            ppInfo->lastElementName = token;
+            ppInfo->lastElementIndex = index;
+            ppInfo->Parent = parent;
+            return 0;
+        }
+        if (index == -1)
+        {
+            return -1;
+        }
+        if (&parent[index].isDir == 0)
+        {
+            return -1;
+        }
+        DE *tempParent = loadDir(&parent[index]);
+        if (parent != startParent)
+        {
+            free(parent);
+        }
+        parent = tempParent;
+        token = token2;
+    }
+    
+    
 }
