@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "b_io.h"
+#include "fsDir.h"
 
 #define MAXFCBS 20
 #define B_CHUNK_SIZE 512
