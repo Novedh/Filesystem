@@ -44,6 +44,6 @@ typedef struct DE
 extern VCB *vcb;
 extern DE *root;
 extern DE *cwd;
-
+extern char* cwdString;
 
 #endif

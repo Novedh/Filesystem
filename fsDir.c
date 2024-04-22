@@ -24,6 +24,7 @@
 //pointer to current directory stored in memory
 DE *root;
 DE *cwd;
+char* cwdString;
 
 int blockSize;
 
@@ -58,6 +59,7 @@ int createDirectory(int numEntries, DE *parent)
         myDir[1].size = myDir[0].size;
         root = myDir;
         cwd = myDir;
+        cwdString ="/";
     }
     else
     {
@@ -153,11 +155,11 @@ int parsePath(char *path, ppRetStruct *ppInfo){
     
 }
 
-int findUnusedDE(DE *de)
+int findUnusedDE(DE *dir)
 {
     for (int i = 2; i < MAX_ENTRIES; i++)
     {
-        if (strcmp(de[i].name, "") == 0)
+        if (strcmp(dir[i].name, "") == 0)
         {
             return i;
         }
@@ -177,7 +179,7 @@ void writeDir(DE *de){
 
 int fs_mkdir(const char *pathname, mode_t mode){
     ppRetStruct ppInfo;
-    DE *res = parsePath(pathname,&ppInfo);
+    int res = parsePath((char*)pathname,&ppInfo);
     if(res == -1){
         return -1;
     }
@@ -190,4 +192,80 @@ int fs_mkdir(const char *pathname, mode_t mode){
     ppInfo.Parent[index].size = newDir[0].size;
 
     writeDir(ppInfo.Parent);
+}
+
+char *fs_getcwd(char *pathname, size_t size){
+    strncpy(pathname, cwdString, size);
+    return 0;
+}
+
+int fs_setcwd(char *pathname){
+    ppRetStruct ppInfo;
+    int res = parsePath((char *)pathname, &ppInfo);
+    if (res == -1)
+    {
+        return -1;
+    }
+    if (ppInfo.lastElementIndex == -1)
+    {
+        return -1;
+    }
+    if(!ppInfo.Parent[ppInfo.lastElementIndex].isDir){
+        return -1;
+    }
+    DE *temp = loadDir(&ppInfo.Parent[ppInfo.lastElementIndex]);
+
+    if(cwd!=root){
+        free(cwd);
+    }
+    cwd = temp;
+
+    //update the stringcwd
+
+    char *newPath;
+
+    if(pathname[0]=='/'){
+        newPath = strdup(pathname);
+    }else{
+        int len1 = strlen(cwdString);
+        int len2 = strlen(pathname);
+        newPath = malloc(len1+len2+2);
+        strcpy(newPath,cwdString);
+        if(newPath[len1-1]!= '/'){
+            strcat(newPath,"/");
+        }
+        strcat(newPath,pathname);
+    }
+    
+    char *tokenVector[MAX_ENTRIES];
+    char *savePtr;
+    char *token = strtok_r(newPath, "/", &savePtr);
+    int index = 0;
+    
+
+    while(token!=NULL){
+        if(strcmp(token, ".")==0){
+            token = strtok_r(NULL, "/", &savePtr);
+            continue;
+        }else if(strcmp(token,"..")==0){
+            if(index>0){
+                index--;
+            }
+        }else{
+            tokenVector[index] = token;
+            index++;
+        }
+        token = strtok_r(NULL,"/",&savePtr);
+    }
+
+    char *returnPath = malloc(strlen(cwdString)+2);
+    strcpy(returnPath,"/");
+    for(int i =0; i<index;i++){
+        strcat(returnPath,tokenVector[i]);
+        strcat(returnPath,"/");
+    }
+    strcpy(cwdString, returnPath);
+    free(returnPath);
+    free(newPath);
+    return 0;
 }
