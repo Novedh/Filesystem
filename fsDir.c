@@ -96,6 +96,17 @@ DE *loadDir(DE *de){
     return dir;
 }
 
+DE *loadDirByLoc(int loc)
+{
+    if (loc <0)
+    {
+        return NULL;
+    }
+    DE *dir = (DE *)malloc(blockSize);
+    LBAread(dir, 1, loc);
+    return dir;
+}
+
 int parsePath(char *path, ppRetStruct *ppInfo){
 
     if(path == NULL){
@@ -186,7 +197,8 @@ int fs_mkdir(const char *pathname, mode_t mode){
     if(ppInfo.lastElementIndex!=-1){
         return -1;
     }
-    DE *newDir = createDirectory(MAX_ENTRIES,ppInfo.Parent);
+    int dirLoc = createDirectory(MAX_ENTRIES, ppInfo.Parent);
+    DE *newDir = loadDirByLoc(dirLoc);
     int index = findUnusedDE(ppInfo.Parent);
     strcpy(ppInfo.Parent[index].name,ppInfo.lastElementName);
     ppInfo.Parent[index].size = newDir[0].size;
@@ -267,5 +279,123 @@ int fs_setcwd(char *pathname){
     strcpy(cwdString, returnPath);
     free(returnPath);
     free(newPath);
+    return 0;
+}
+
+int fs_rmdir(const char *pathname){
+    ppRetStruct ppInfo;
+
+    int res = parsePath(pathname,&ppInfo);
+
+    if (res == -1)
+    {
+        return -1;
+    }
+    if (ppInfo.lastElementIndex == -1)
+    {
+        return -1;
+    }
+    if (ppInfo.Parent[ppInfo.lastElementIndex].isDir == 0)
+    {
+        return -1;
+    }
+
+    DE *rmDir = &ppInfo.Parent[ppInfo.lastElementIndex];
+    int blockNum = rmDir[0].loc;
+    int numBlocks = (rmDir[0].size + blockSize - 1) / blockSize;
+    //free the blocks on freemap so that they can be reused;
+    freeBlocks(blockNum, numBlocks);
+
+    strcpy(rmDir->name, "");
+    rmDir->size = 0;
+    rmDir->loc = 0;
+    rmDir->isDir = 0;
+
+    int parentIndex = ppInfo.lastElementIndex;
+    DE *parentDir = ppInfo.Parent;
+    // "" means unused directory entry so we are clearing it to be reused
+    strcpy(parentDir[parentIndex].name,"");
+
+    writeDir(parentDir);
+
+}
+
+int fs_isFile(char *filename){
+    ppRetStruct ppInfo;
+
+    int res = parsePath(filename,&ppInfo);
+    if(res ==-1){
+        return 0;
+    }
+    if (ppInfo.lastElementIndex == -1)
+    {
+        return -1;
+    }
+
+    DE *de = &ppInfo.Parent[ppInfo.lastElementIndex];
+    //  isDir 0 means file & 1 means directory
+    if(de->isDir == 0){
+        return 1;
+    }else{
+        return 0;
+    }
+    
+}
+
+int fs_isDir(char *pathname){
+
+    ppRetStruct ppInfo;
+
+    int res = parsePath(pathname, &ppInfo);
+    if (res == -1)
+    {
+        return 0;
+    }
+    if (ppInfo.lastElementIndex == -1)
+    {
+        return -1;
+    }
+
+    DE *de = &ppInfo.Parent[ppInfo.lastElementIndex];
+    //  isDir 0 means file & 1 means directory
+    if (de->isDir == 1)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+int fs_delete(char *filename)
+{
+    ppRetStruct ppInfo;
+
+    int res = parsePath(filename, &ppInfo);
+    if (res == -1)
+    {
+        return -1;
+    }
+    if(ppInfo.lastElementIndex == -1){
+        return -1;
+    }
+    //makes sure it is a file
+    if(ppInfo.Parent[ppInfo.lastElementIndex].isDir == 1){
+        return -1;
+    }
+
+    DE * de = &ppInfo.Parent[ppInfo.lastElementIndex];
+
+    int numBlocks = (de->size + blockSize - 1) / blockSize;
+    freeBlocks(de->loc, numBlocks);
+
+    strcpy(de->name, "");
+    de->size = 0;
+    de->loc = 0;
+    de->isDir = 0;
+
+    writeDir(ppInfo.Parent);
+
     return 0;
 }
