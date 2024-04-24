@@ -214,6 +214,7 @@ int fs_mkdir(const char *pathname, mode_t mode){
         return -1;
     }
     int dirLoc = createDirectory(MAX_ENTRIES, ppInfo.Parent);
+    printf("\n\n got to here %d\n\n",dirLoc);
 
     DE *newDir = loadDirByLoc(dirLoc);
     int index = findUnusedDE(ppInfo.Parent);

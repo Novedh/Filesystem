@@ -24,6 +24,11 @@
 
 unsigned char *freeSpaceMap;
 
+void loadFSM(){
+    int bytesNeeded = (vcb->numberOfBlocks + 7) / 8;
+    LBAread(freeSpaceMap, vcb->freeStart - 1, 1);
+}
+
 void setBit(int blockNum)
 {
     int byteNum = blockNum / 8;
@@ -40,6 +45,13 @@ void clearBit(int blockNum)
 
 int getBit(int blockNum)
 {
+    if (freeSpaceMap == NULL)
+    {
+        return -1;
+    }
+    if(blockNum>=vcb->numberOfBlocks){
+        return -1;
+    }
     int byteNum = blockNum / 8;
     int bitNum = blockNum % 8;
     return ((freeSpaceMap[byteNum] >> bitNum) & 1);
@@ -77,6 +89,7 @@ int allocateBlocks(uint64_t numBlocksRequested)
         // Find a free block
         if (getBit(i) == 0)
         {
+            
             // Track first free block in series
             if (continuousFreeBlocks == 0)
             {

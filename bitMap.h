@@ -15,7 +15,7 @@
 #include "fsLow.h"
 
 
-
+void loadFSM();
 void setBit(int blockNum);
 void clearBit(int blockNum);
 int getBit(int blockNum);

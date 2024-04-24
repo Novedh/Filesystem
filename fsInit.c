@@ -47,7 +47,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 
 	if(vcb->signature == SIGNATURE){
 		printf("Volume already initialized! \n");
-		LBAread(vcb,1,0);
+		loadFSM;
 		loadRoot;
 		return 0;
 	}
