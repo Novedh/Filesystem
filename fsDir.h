@@ -32,6 +32,8 @@ typedef struct ppRetStruct{
 int createDirectory(int numEntries, DE *parent);
 int findInDir(DE *parent, char *string);
 DE *loadDir(DE *de);
+DE *loadDirByLoc(int loc);
+void loadRoot();
 int parsePath(char *path, ppRetStruct *ppInfo);
 int findUnusedDE(DE *dir);
 void writeDir(DE *de);

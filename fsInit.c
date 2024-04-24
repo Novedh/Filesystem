@@ -48,6 +48,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	if(vcb->signature == SIGNATURE){
 		printf("Volume already initialized! \n");
 		LBAread(vcb,1,0);
+		loadRoot;
 		return 0;
 	}
 
@@ -58,8 +59,6 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	vcb->rootStart = createDirectory(MAX_ENTRIES, NULL); // eventually replace with a initRootDirectory
 
 	LBAwrite(vcb,1,0);
-
-	
 
 	return 0;
 	}

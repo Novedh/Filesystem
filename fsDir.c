@@ -29,13 +29,16 @@ char *cwdString;
 extern VCB *vcb;
 int blockSize = 0;
 
-
+void loadRoot(){
+    root = (DE*)malloc(blockSize);
+    LBAread(root,1,vcb->rootStart);
+    cwdString = "/";
+    cwd = root;
+}
 
 int createDirectory(int numEntries, DE *parent)
 {
     
-    printf("\n\nvcb blocksize: %ld\n\n",vcb->blockSize);
-
     blockSize = vcb->blockSize;
 
     int spaceNeeded = numEntries * sizeof(DE);
@@ -201,10 +204,8 @@ void writeDir(DE *de){
 
 int fs_mkdir(const char *pathname, mode_t mode){
     ppRetStruct ppInfo;
-    printf("\n\n test: %s", cwdString);
 
     int res = parsePath((char*)pathname,&ppInfo);
-    printf("\n\n test: %s\n\n", ppInfo.lastElementName);
 
     if(res == -1){
         return -1;
@@ -213,7 +214,6 @@ int fs_mkdir(const char *pathname, mode_t mode){
         return -1;
     }
     int dirLoc = createDirectory(MAX_ENTRIES, ppInfo.Parent);
-    printf("\n\n test: %s\n\n", ppInfo.lastElementName);
 
     DE *newDir = loadDirByLoc(dirLoc);
     int index = findUnusedDE(ppInfo.Parent);
