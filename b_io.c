@@ -31,6 +31,8 @@ typedef struct b_fcb
 	char * buf;		//holds the open file buffer
 	int index;		//holds the current position in the buffer
 	int buflen;		//holds how many valid bytes are in the buffer
+	int currentBlk;
+	int numBlocks;
 	} b_fcb;
 	
 b_fcb fcbArray[MAXFCBS];
@@ -54,7 +56,7 @@ b_io_fd b_getFCB ()
 	{
 	for (int i = 0; i < MAXFCBS; i++)
 		{
-		if (fcbArray[i].buff == NULL)
+		if (fcbArray[i].buf == NULL)
 			{
 			return i;		//Not thread safe (But do not worry about it for this assignment)
 			}
@@ -68,15 +70,39 @@ b_io_fd b_getFCB ()
 b_io_fd b_open (char * filename, int flags)
 	{
 	b_io_fd returnFd;
+	/*
+	
+	fileInfo * fi;
 
 	//*** TODO ***:  Modify to save or set any information needed
 	//
 	//
 		
 	if (startup == 0) b_init();  //Initialize our system
+	fi = GetFileInfo (filename);
 	
-	returnFd = b_getFCB();				// get our own file descriptor
-										// check for error - all used FCB's
+	if (fi == NULL)
+	{
+		return (-1);
+	}
+	
+
+	char * buf = malloc (B_CHUNK_SIZE);
+	if (buf == NULL)
+	{
+		return(-999);
+	}
+
+	returnFd = b_getFCB();
+	//fcbArray[returnFd].fi = fi;
+	fcbArray[returnFd].buf = buf;
+	fcbArray[returnFd].index = 0;
+	fcbArray[returnFd].buflen = 0;
+	fcbArray[returnFd].currentBlk = 0;
+	//fcbArray[returnFd].numBlocks = (fi->fileSize + (B_CHUNK_SIZE -1)) / B_CHUNK_SIZE;
+	*/
+
+	
 	
 	return (returnFd);						// all set
 	}
@@ -137,6 +163,14 @@ int b_write (b_io_fd fd, char * buffer, int count)
 //  +-------------+------------------------------------------------+--------+
 int b_read (b_io_fd fd, char * buffer, int count)
 	{
+		/*
+		
+
+		int bytesRead;
+		int bytesReturned;
+		int part1, part2, part3;
+		int numberOfBlocksToCopy;
+		int remainingBytesInMyBuffer;
 
 	if (startup == 0) b_init();  //Initialize our system
 
@@ -145,6 +179,95 @@ int b_read (b_io_fd fd, char * buffer, int count)
 		{
 		return (-1); 					//invalid file descriptor
 		}
+		
+		
+	if (fcbArray[fd].fi == NULL)
+	{
+		return(-1);
+	}
+	
+
+	remainingBytesInMyBuffer = fcbArray[fd].buflen - fcbArray[fd].index;
+
+	int amountAlreadyDelivered = (fcbArray[fd].currentBlk * B_CHUNK_SIZE);
+	if ((count + amountAlreadyDelivered) > fcbArray[fd].fi->fileSize)
+	{
+		count = fcbArray[fd].fi->fileSize - amountAlreadyDelivered;
+
+		if (count < 0)
+		{
+			printf("ERROR");
+		}
+	}
+
+	if (remainingBytesInMyBuffer >= count)
+	{
+		part1 = count;
+		part2 = 0;
+		part3 = 0;
+	}
+	else
+	{
+		part1 = remainingBytesInMyBuffer;
+
+		part3 = count - remainingBytesInMyBuffer;
+
+		numberOfBlocksToCopy = part3 / B_CHUNK_SIZE;
+		part2 = numberOfBlocksToCopy * B_CHUNK_SIZE;
+
+		part3 = part3 - part2;
+	}
+
+	if (part1 > 0)
+	{
+		memcpy (buffer, fcbArray[fd].buf + fcbArray[fd].index, part1);
+		fcbArray[fd].index = fcbArray[fd].index + part1;
+	}
+
+	if (part2 > 0)
+	{
+		bytesRead = LBAread (buffer+part1, numberOfBlocksToCopy, fcbArray[fd].currentBlk + fcbArray[fd].fi->location);
+
+		fcbArray[fd].currentBlk += numberOfBlocksToCopy;
+		part2 = bytesRead * B_CHUNK_SIZE;
+	}
+
+	if (part3 > 0)
+	{
+		bytesRead = LBAread (fcbArray[fd].buf, 1, fcbArray[fd].currentBlk + fcbArray[fd].fi->location);
+
+		bytesRead = bytesRead * B_CHUNK_SIZE;
+
+		fcbArray[fd].currentBlk += 1;
+
+		fcbArray[fd].index = 0;
+		fcbArray[fd].buflen = bytesRead;
+
+		if (bytesRead < part3)
+		{
+			part3 = bytesRead;
+		}
+
+		if (part3 > 0)
+		{
+			memcpy(buffer+part1+part2, fcbArray[fd].buf + fcbArray[fd].index, part3);
+			fcbArray[fd].index = fcbArray[fd].index + part3;
+		}
+	}
+
+	bytesReturned = part1 + part2 + part3;
+
+	return(bytesReturned);
+	*/
+		
+		
+	
+	
+	
+	
+	
+	
+	
 		
 	return (0);	//Change this
 	}
