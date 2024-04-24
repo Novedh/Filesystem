@@ -22,15 +22,20 @@
 #include "mfs.h"
 
 //pointer to current directory stored in memory
+
 DE *root;
 DE *cwd;
-char* cwdString;
-
+char *cwdString;
+extern VCB *vcb;
 int blockSize;
+
 
 
 int createDirectory(int numEntries, DE *parent)
 {
+    
+    printf("\n\nvcb blocksize: %ld\n\n",vcb->blockSize);
+
     blockSize = vcb->blockSize;
     int spaceNeeded = numEntries * sizeof(DE);
     int blocksNeeded = (spaceNeeded + vcb->blockSize - 1) / vcb->blockSize;
@@ -53,6 +58,7 @@ int createDirectory(int numEntries, DE *parent)
     strcpy(myDir[1].name, "..");
     myDir[1].isDir = 1;
     // if we are in root
+
     if (parent == NULL)
     {
         myDir[1].loc = myDir[0].loc;
@@ -67,7 +73,7 @@ int createDirectory(int numEntries, DE *parent)
         myDir[1].size = parent[0].size;
     }
 
-    LBAwrite(myDir, 6, loc);
+    LBAwrite(myDir, blocksNeeded, loc);
     free(myDir);
 
     return loc;
@@ -75,6 +81,7 @@ int createDirectory(int numEntries, DE *parent)
 
 
 int findInDir(DE *parent, char *string){
+    
     if(parent == NULL || string == NULL){
         return -1;
     }
@@ -106,6 +113,7 @@ DE *loadDirByLoc(int loc)
     LBAread(dir, 1, loc);
     return dir;
 }
+//    printf("\n\n test: \n\n");
 
 int parsePath(char *path, ppRetStruct *ppInfo){
 
@@ -138,6 +146,7 @@ int parsePath(char *path, ppRetStruct *ppInfo){
     }
     while(1){
         int index = findInDir(parent,token);
+
         char *token2 = strtok(NULL,"/");
         if (token2 == NULL)
         {
@@ -188,9 +197,14 @@ void writeDir(DE *de){
 
 }
 
+
 int fs_mkdir(const char *pathname, mode_t mode){
     ppRetStruct ppInfo;
+    printf("\n\n test: %s", cwdString);
+
     int res = parsePath((char*)pathname,&ppInfo);
+    printf("\n\n test: %s\n\n", ppInfo.lastElementName);
+
     if(res == -1){
         return -1;
     }
@@ -198,6 +212,8 @@ int fs_mkdir(const char *pathname, mode_t mode){
         return -1;
     }
     int dirLoc = createDirectory(MAX_ENTRIES, ppInfo.Parent);
+    printf("\n\n test: %s\n\n", ppInfo.lastElementName);
+
     DE *newDir = loadDirByLoc(dirLoc);
     int index = findUnusedDE(ppInfo.Parent);
     strcpy(ppInfo.Parent[index].name,ppInfo.lastElementName);
