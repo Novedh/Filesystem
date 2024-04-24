@@ -27,7 +27,7 @@ DE *root;
 DE *cwd;
 char *cwdString;
 extern VCB *vcb;
-int blockSize;
+int blockSize = 0;
 
 
 
@@ -37,6 +37,7 @@ int createDirectory(int numEntries, DE *parent)
     printf("\n\nvcb blocksize: %ld\n\n",vcb->blockSize);
 
     blockSize = vcb->blockSize;
+
     int spaceNeeded = numEntries * sizeof(DE);
     int blocksNeeded = (spaceNeeded + vcb->blockSize - 1) / vcb->blockSize;
     int bytesNeeded = blocksNeeded * vcb->blockSize;

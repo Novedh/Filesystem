@@ -34,12 +34,8 @@ VCB *vcb;
 
 // TODO: Define Directory Entry (DE) Struct
 
-
-
-
 	// TODO: Write init rootDirectory
 	// Return starting block number of root directory
-
 
 int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	{
@@ -51,7 +47,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 
 	if(vcb->signature == SIGNATURE){
 		printf("Volume already initialized! \n");
-		free(vcb);
+		LBAread(vcb,1,0);
 		return 0;
 	}
 
@@ -63,7 +59,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 
 	LBAwrite(vcb,1,0);
 
-	free(vcb);
+	
 
 	return 0;
 	}
@@ -71,6 +67,6 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	
 void exitFileSystem ()
 	{
-		
+		free(vcb);
 		printf("System exiting\n");
 	}
