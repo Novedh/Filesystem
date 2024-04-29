@@ -47,8 +47,8 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 
 	if(vcb->signature == SIGNATURE){
 		printf("Volume already initialized! \n");
-		loadFSM;
-		loadRoot;
+		loadFSM();
+		loadRoot();
 		return 0;
 	}
 
@@ -66,6 +66,8 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	
 void exitFileSystem ()
 	{
+		exitFreeMap();
+		LBAwrite(vcb, 1, 0);
 		free(vcb);
 		printf("System exiting\n");
 	}

@@ -27,10 +27,9 @@ DE *root;
 DE *cwd;
 char *cwdString;
 extern VCB *vcb;
-int blockSize = 0;
 
 void loadRoot(){
-    root = (DE*)malloc(blockSize);
+    root = (DE*)malloc(vcb->blockSize);
     LBAread(root,1,vcb->rootStart);
     cwdString = "/";
     cwd = root;
@@ -39,8 +38,6 @@ void loadRoot(){
 int createDirectory(int numEntries, DE *parent)
 {
     
-    blockSize = vcb->blockSize;
-
     int spaceNeeded = numEntries * sizeof(DE);
     int blocksNeeded = (spaceNeeded + vcb->blockSize - 1) / vcb->blockSize;
     int bytesNeeded = blocksNeeded * vcb->blockSize;
@@ -102,7 +99,7 @@ DE *loadDir(DE *de){
         return NULL;
     }
     int blockNum = de->loc;
-    DE *dir = (DE*)malloc(blockSize);
+    DE *dir = (DE*)malloc(vcb->blockSize);
     LBAread(dir, 1,blockNum);
     return dir;
 }
@@ -113,7 +110,7 @@ DE *loadDirByLoc(int loc)
     {
         return NULL;
     }
-    DE *dir = (DE *)malloc(blockSize);
+    DE *dir = (DE *)malloc(vcb->blockSize);
     LBAread(dir, 1, loc);
     return dir;
 }
@@ -214,7 +211,7 @@ int fs_mkdir(const char *pathname, mode_t mode){
         return -1;
     }
     int dirLoc = createDirectory(MAX_ENTRIES, ppInfo.Parent);
-    printf("\n\n got to here %d\n\n",dirLoc);
+    printf("\n\n created Dir loc: %d\n\n",dirLoc);
 
     DE *newDir = loadDirByLoc(dirLoc);
     int index = findUnusedDE(ppInfo.Parent);
@@ -320,7 +317,7 @@ int fs_rmdir(const char *pathname){
 
     DE *rmDir = &ppInfo.Parent[ppInfo.lastElementIndex];
     int blockNum = rmDir[0].loc;
-    int numBlocks = (rmDir[0].size + blockSize - 1) / blockSize;
+    int numBlocks = (rmDir[0].size + vcb->blockSize - 1) / vcb->blockSize;
     //free the blocks on freemap so that they can be reused;
     freeBlocks(blockNum, numBlocks);
 
@@ -405,7 +402,7 @@ int fs_delete(char *filename)
 
     DE * de = &ppInfo.Parent[ppInfo.lastElementIndex];
 
-    int numBlocks = (de->size + blockSize - 1) / blockSize;
+    int numBlocks = (de->size + vcb->blockSize - 1) / vcb->blockSize;
     freeBlocks(de->loc, numBlocks);
 
     strcpy(de->name, "");

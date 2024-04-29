@@ -24,9 +24,18 @@
 
 unsigned char *freeSpaceMap;
 
-void loadFSM(){
-    int bytesNeeded = (vcb->numberOfBlocks + 7) / 8;
-    LBAread(freeSpaceMap, vcb->freeStart - 1, 1);
+void loadFSM()
+{
+    if(freeSpaceMap!=NULL){
+        free(freeSpaceMap);
+        freeSpaceMap = NULL;
+    }
+    
+    freeSpaceMap = calloc(5,vcb->blockSize);
+    if(freeSpaceMap == NULL){
+        printf("failed to load Free map.\n");
+    }
+    LBAread(freeSpaceMap,vcb->freeStart-1,1);
 }
 
 void setBit(int blockNum)
@@ -75,6 +84,8 @@ int initFreeSpaceMap(uint64_t numberOfBlocks, uint64_t blockSize)
     }
 
     LBAwrite(freeSpaceMap, blocksNeeded, 1);
+    printf("%d",blocksNeeded);
+    
 
     return blocksNeeded + 1;
 }
@@ -83,7 +94,6 @@ int allocateBlocks(uint64_t numBlocksRequested)
 {
     uint64_t startFreeBlock = -1;
     uint64_t continuousFreeBlocks = 0;
-
     for (int i = 0; i < vcb->numberOfBlocks; i++)
     {
         // Find a free block
@@ -136,5 +146,10 @@ int freeBlocks(int index, int numBlocks)
     {
         clearBit(i);
     }
-    LBAwrite(freeSpaceMap, vcb->freeStart, 1);
+    LBAwrite(freeSpaceMap, vcb->freeStart-1, 1);
+}
+
+void exitFreeMap(){
+    LBAwrite(freeSpaceMap, vcb->freeStart - 1, 1);
+    free(freeSpaceMap);
 }

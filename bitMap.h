@@ -13,7 +13,7 @@
  **************************************************************/
 
 #include "fsLow.h"
-
+#include "global.h"
 
 void loadFSM();
 void setBit(int blockNum);
@@ -22,3 +22,4 @@ int getBit(int blockNum);
 int initFreeSpaceMap(uint64_t numberOfBlocks, uint64_t blockSize);
 int allocateBlocks(uint64_t numBlocksRequested);
 int freeBlocks(int index, int numBlocks);
+void exitFreeMap();
