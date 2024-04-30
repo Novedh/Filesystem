@@ -76,7 +76,6 @@ int createDirectory(int numEntries, DE *parent)
 
     LBAwrite(myDir, blocksNeeded, loc);
     free(myDir);
-
     return loc;
 }
 
@@ -193,8 +192,8 @@ void writeDir(DE *de){
         return;
     }
     int blockNum = de->loc;
-
-    LBAwrite(de,1,blockNum);
+    int numBlocks = (de->size-vcb->blockSize)/vcb->blockSize;
+    LBAwrite(de,numBlocks,blockNum);
 
 }
 
@@ -203,7 +202,7 @@ int fs_mkdir(const char *pathname, mode_t mode){
     ppRetStruct ppInfo;
 
     int res = parsePath((char*)pathname,&ppInfo);
-
+    
     if(res == -1){
         return -1;
     }
@@ -211,19 +210,30 @@ int fs_mkdir(const char *pathname, mode_t mode){
         return -1;
     }
     int dirLoc = createDirectory(MAX_ENTRIES, ppInfo.Parent);
-    printf("\n\n created Dir loc: %d\n\n",dirLoc);
+    printf("deb: created Dir loc: %d\n\n",dirLoc);
 
     DE *newDir = loadDirByLoc(dirLoc);
+    printf("deb: mkdir new dir is dir: %d---\n",newDir->isDir);
+    
     int index = findUnusedDE(ppInfo.Parent);
-    strcpy(ppInfo.Parent[index].name,ppInfo.lastElementName);
+    printf("\n\n deb: index: %d\n\n", index);
+    strcpy(ppInfo.Parent[index].name, ppInfo.lastElementName);
     ppInfo.Parent[index].size = newDir[0].size;
+    printf("deb: mkdir last element name: %s---\n", ppInfo.lastElementName);
+    printf("deb: mkdir new dir name in parent dir: %s---\n", ppInfo.Parent[index].name);
+
+    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[3].name);
+    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[4].name);
+    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[5].name);
+    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[6].name);
+    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[7].name);
 
     writeDir(ppInfo.Parent);
 }
 
 char *fs_getcwd(char *pathname, size_t size){
     strncpy(pathname, cwdString, size);
-    return 0;
+    return cwdString;
 }
 
 int fs_setcwd(char *pathname){
@@ -299,28 +309,37 @@ int fs_setcwd(char *pathname){
 
 int fs_rmdir(const char *pathname){
     ppRetStruct ppInfo;
-
+    printf("deb: rmdir start---\n");
     int res = parsePath(pathname,&ppInfo);
 
     if (res == -1)
     {
+        printf("deb: rmdir res =-1---\n");
+
         return -1;
     }
     if (ppInfo.lastElementIndex == -1)
     {
+        printf("deb: rmdir index = -1 ---\n");
+
         return -1;
     }
     if (ppInfo.Parent[ppInfo.lastElementIndex].isDir == 0)
     {
+        printf("deb: rmdir is file---\n");
+
         return -1;
     }
+    printf("deb: rmdir point 1---\n");
 
     DE *rmDir = &ppInfo.Parent[ppInfo.lastElementIndex];
     int blockNum = rmDir[0].loc;
     int numBlocks = (rmDir[0].size + vcb->blockSize - 1) / vcb->blockSize;
     //free the blocks on freemap so that they can be reused;
-    printf("\nblocknum: %d\n number of blocks: %d\n",blockNum,numBlocks);
+    printf("deb: blocknum: %d\n number of blocks: %d\n",blockNum,numBlocks);
     freeBlocks(blockNum, numBlocks);
+
+    printf("deb: rmdir point 2---\n");
 
     strcpy(rmDir->name, "");
     rmDir->size = 0;

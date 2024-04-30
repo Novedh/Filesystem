@@ -406,12 +406,12 @@ int cmd_rm (int argcnt, char *argvec[])
 	//must determine if file or directory
 	if (fs_isDir (path))
 		{
-		printf("debug: was a directory");
+		printf("deb: was a directory");
 		return (fs_rmdir (path));
 		}		
 	if (fs_isFile (path))
 		{
-		printf("debug: was a file");
+		printf("deb: was a file");
 		return (fs_delete(path));
 		}	
 		
