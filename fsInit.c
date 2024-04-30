@@ -55,7 +55,8 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	vcb->signature = SIGNATURE;
 	vcb->numberOfBlocks = numberOfBlocks;
 	vcb->blockSize = blockSize;
-	vcb->freeStart = initFreeSpaceMap(vcb->numberOfBlocks, vcb->blockSize);
+	vcb->freeStart = 1;
+	vcb->freeSize = initFreeSpaceMap(vcb->numberOfBlocks, vcb->blockSize);
 	vcb->rootStart = createDirectory(MAX_ENTRIES, NULL); // eventually replace with a initRootDirectory
 
 	LBAwrite(vcb,1,0);

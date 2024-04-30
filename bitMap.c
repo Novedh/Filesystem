@@ -35,7 +35,7 @@ void loadFSM()
     if(freeSpaceMap == NULL){
         printf("failed to load Free map.\n");
     }
-    LBAread(freeSpaceMap,vcb->freeStart-1,1);
+    LBAread(freeSpaceMap, vcb->freeSize, 1);
 }
 
 void setBit(int blockNum)
@@ -87,7 +87,7 @@ int initFreeSpaceMap(uint64_t numberOfBlocks, uint64_t blockSize)
     printf("%d",blocksNeeded);
     
 
-    return blocksNeeded + 1;
+    return blocksNeeded;
 }
 
 int allocateBlocks(uint64_t numBlocksRequested)
@@ -118,7 +118,7 @@ int allocateBlocks(uint64_t numBlocksRequested)
                 }
 
                 // Write updated Map to disk
-                LBAwrite(freeSpaceMap, vcb->freeStart - 1, 1);
+                LBAwrite(freeSpaceMap, vcb->freeSize, 1);
 
                 // Return first free block in series
                 return startFreeBlock;
@@ -137,7 +137,7 @@ int allocateBlocks(uint64_t numBlocksRequested)
 // TODO BUT NOT REQUIRED FOR M1: Write release space function
 int freeBlocks(int index, int numBlocks)
 {
-    LBAread(freeSpaceMap, vcb->freeStart - 1, 1);
+    LBAread(freeSpaceMap, vcb->freeSize, 1);
     if (index < 1)
     {
         return -1;
@@ -146,10 +146,10 @@ int freeBlocks(int index, int numBlocks)
     {
         clearBit(i);
     }
-    LBAwrite(freeSpaceMap, vcb->freeStart-1, 1);
+    LBAwrite(freeSpaceMap, vcb->freeSize, 1);
 }
 
 void exitFreeMap(){
-    LBAwrite(freeSpaceMap, vcb->freeStart - 1, 1);
+    LBAwrite(freeSpaceMap, vcb->freeSize, 1);
     free(freeSpaceMap);
 }

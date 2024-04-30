@@ -26,7 +26,7 @@ typedef struct VCB
     uint64_t blockSize;
     uint64_t freeStart;
     uint64_t rootStart;
-
+    uint64_t freeSize;
 } VCB;
 
 typedef struct DE
