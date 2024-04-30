@@ -319,6 +319,7 @@ int fs_rmdir(const char *pathname){
     int blockNum = rmDir[0].loc;
     int numBlocks = (rmDir[0].size + vcb->blockSize - 1) / vcb->blockSize;
     //free the blocks on freemap so that they can be reused;
+    printf("\nblocknum: %d\n number of blocks: %d\n",blockNum,numBlocks);
     freeBlocks(blockNum, numBlocks);
 
     strcpy(rmDir->name, "");
@@ -326,11 +327,13 @@ int fs_rmdir(const char *pathname){
     rmDir->loc = 0;
     rmDir->isDir = 0;
 
-    int parentIndex = ppInfo.lastElementIndex;
     DE *parentDir = ppInfo.Parent;
-    // "" means unused directory entry so we are clearing it to be reused
-    strcpy(parentDir[parentIndex].name,"");
-
+    strcpy(parentDir[ppInfo.lastElementIndex].name, "");
+    strcpy(parentDir[0].name, ".");
+    parentDir[0].loc = ppInfo.Parent[0].loc;
+    parentDir[0].size = ppInfo.Parent[0].size;
+    parentDir[1].loc = ppInfo.Parent[1].loc;
+    parentDir[1].size = ppInfo.Parent[1].size;
     writeDir(parentDir);
 
 }
@@ -413,4 +416,47 @@ int fs_delete(char *filename)
     writeDir(ppInfo.Parent);
 
     return 0;
+}
+
+fdDir *fs_opendir(const char *pathname)
+{
+    ppRetStruct ppInfo;
+    int res = parsePath(pathname, &ppInfo);
+    if (res == -1)
+    {
+        return NULL;
+    }
+    if (ppInfo.lastElementIndex == -1)
+    {
+        return NULL;
+    }
+    if (ppInfo.Parent[ppInfo.lastElementIndex].isDir == 0)
+    {
+        return NULL;
+    }
+
+    fdDir *dirp = (fdDir *)malloc(sizeof(fdDir));
+    if (dirp == NULL)
+    {
+        return NULL; 
+    }
+
+    dirp->d_reclen = sizeof(struct fs_diriteminfo);
+    dirp->dirEntryPosition = 0;
+    dirp->directory = loadDir(&ppInfo.Parent[ppInfo.lastElementIndex]);
+
+    if (dirp->directory == NULL)
+    {
+        free(dirp); 
+        return NULL;
+    }
+    dirp->di = (struct fs_diriteminfo *)malloc(sizeof(struct fs_diriteminfo));
+    if (dirp->di == NULL)
+    {
+        free(dirp->directory); 
+        free(dirp);           
+        return NULL;          
+    }
+
+    return dirp;
 }

@@ -41,11 +41,11 @@
 #define CMDCP_ON	0
 #define CMDMV_ON	0
 #define CMDMD_ON	1
-#define CMDRM_ON	0
+#define CMDRM_ON	1
 #define CMDCP2L_ON	0
 #define CMDCP2FS_ON	0
-#define CMDCD_ON	0
-#define CMDPWD_ON	0
+#define CMDCD_ON	1
+#define CMDPWD_ON	1
 #define CMDTOUCH_ON	0
 #define CMDCAT_ON	0
 
@@ -406,10 +406,12 @@ int cmd_rm (int argcnt, char *argvec[])
 	//must determine if file or directory
 	if (fs_isDir (path))
 		{
+		printf("debug: was a directory");
 		return (fs_rmdir (path));
 		}		
 	if (fs_isFile (path))
 		{
+		printf("debug: was a file");
 		return (fs_delete(path));
 		}	
 		

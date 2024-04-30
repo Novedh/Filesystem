@@ -49,6 +49,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 		printf("Volume already initialized! \n");
 		loadFSM();
 		loadRoot();
+		cwdString = "/";
 		return 0;
 	}
 
