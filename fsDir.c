@@ -29,8 +29,9 @@ char *cwdString;
 extern VCB *vcb;
 
 void loadRoot(){
-    root = (DE*)malloc(vcb->blockSize);
-    LBAread(root,1,vcb->rootStart);
+    int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
+    root = (DE*)malloc(vcb->blockSize*blocksNeeded);
+    LBAread(root,blocksNeeded,vcb->rootStart);
     cwdString = "/";
     cwd = root;
 }
@@ -213,20 +214,22 @@ int fs_mkdir(const char *pathname, mode_t mode){
     printf("deb: created Dir loc: %d\n\n",dirLoc);
 
     DE *newDir = loadDirByLoc(dirLoc);
-    printf("deb: mkdir new dir is dir: %d---\n",newDir->isDir);
+    printf("deb: mkdir new dir is dir: %d\n",newDir->isDir);
     
     int index = findUnusedDE(ppInfo.Parent);
     printf("\n\n deb: index: %d\n\n", index);
     strcpy(ppInfo.Parent[index].name, ppInfo.lastElementName);
     ppInfo.Parent[index].size = newDir[0].size;
-    printf("deb: mkdir last element name: %s---\n", ppInfo.lastElementName);
-    printf("deb: mkdir new dir name in parent dir: %s---\n", ppInfo.Parent[index].name);
+    printf("deb: mkdir last element name: %s\n", ppInfo.lastElementName);
+    printf("deb: mkdir new dir name in parent dir: %s\n", ppInfo.Parent[index].name);
 
-    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[3].name);
-    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[4].name);
-    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[5].name);
-    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[6].name);
-    printf("deb: mkdir parent dir index names: %s---\n", ppInfo.Parent[7].name);
+    printf("deb: mkdir parent dir index 1 names: %s\n", ppInfo.Parent[1].name);
+    printf("deb: mkdir parent dir index 2 names: %s\n", ppInfo.Parent[2].name);
+    printf("deb: mkdir parent dir index 3 names: %s\n", ppInfo.Parent[3].name);
+    printf("deb: mkdir parent dir index 4 names: %s\n", ppInfo.Parent[4].name);
+    printf("deb: mkdir parent dir index 5 names: %s\n", ppInfo.Parent[5].name);
+    printf("deb: mkdir parent dir index 6 names: %s\n", ppInfo.Parent[6].name);
+    printf("deb: mkdir parent dir index 7 names: %s\n", ppInfo.Parent[7].name);
 
     writeDir(ppInfo.Parent);
 }
