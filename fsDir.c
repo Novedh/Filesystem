@@ -197,6 +197,7 @@ void writeDir(DE *de){
     }
     int blockNum = de->loc;
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
+    printf("deb: writedir blocks needed:%d\n",blocksNeeded);
     LBAwrite(de,blocksNeeded,blockNum);
 
 }
@@ -221,6 +222,12 @@ int fs_mkdir(const char *pathname, mode_t mode){
     printf("deb: index: %d\n", index);
     strcpy(ppInfo.Parent[index].name, ppInfo.lastElementName);
     ppInfo.Parent[index].size = newDir[0].size;
+    ppInfo.Parent[index].isDir = newDir[0].isDir;
+    ppInfo.Parent[index].loc = newDir[0].loc;
+    ppInfo.Parent[index].createTime = newDir[0].createTime;
+    ppInfo.Parent[index].size = newDir[0].size;
+    printf("deb: mkdir ppinfo[index].loc: %d\n", ppInfo.Parent[index].loc);
+
     printf("deb: mkdir last element name: %s\n", ppInfo.lastElementName);
     printf("deb: mkdir new dir name in parent dir: %s\n\n", ppInfo.Parent[index].name);
 
@@ -244,15 +251,21 @@ char *fs_getcwd(char *pathname, size_t size){
 int fs_setcwd(char *pathname){
     ppRetStruct ppInfo;
     int res = parsePath((char *)pathname, &ppInfo);
+    printf("deb: setcwd ppinfo last element name: %s \n",ppInfo.lastElementName);
+    printf("deb: setcwd ppinfo parent[2] loc: %s \n", ppInfo.Parent[2].loc);
+
     if (res == -1)
     {
+        printf("deb: parse failed\n");
         return -1;
     }
     if (ppInfo.lastElementIndex == -1)
     {
+        printf("deb: last element not found\n");
         return -1;
     }
     if(!ppInfo.Parent[ppInfo.lastElementIndex].isDir){
+        printf("deb: not a directory: %d\n", ppInfo.Parent[ppInfo.lastElementIndex].isDir);
         return -1;
     }
     DE *temp = loadDir(&ppInfo.Parent[ppInfo.lastElementIndex]);
@@ -261,6 +274,8 @@ int fs_setcwd(char *pathname){
         free(cwd);
     }
     cwd = temp;
+    printf("Current Working Directory Updated to: %s\n", pathname);
+    printf("Current Working Directory String: %s\n", cwdString);
 
     //update the stringcwd
 
