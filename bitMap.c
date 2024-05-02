@@ -84,7 +84,6 @@ int initFreeSpaceMap(uint64_t numberOfBlocks, uint64_t blockSize)
     }
 
     LBAwrite(freeSpaceMap, blocksNeeded, 1);
-    printf("%d",blocksNeeded);
     
 
     return blocksNeeded;

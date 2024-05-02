@@ -28,6 +28,7 @@ DE *cwd;
 char *cwdString;
 extern VCB *vcb;
 
+
 void loadRoot(){
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
     root = (DE*)malloc(vcb->blockSize*blocksNeeded);
@@ -98,9 +99,10 @@ DE *loadDir(DE *de){
     if (de == NULL){
         return NULL;
     }
+    int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
     int blockNum = de->loc;
-    DE *dir = (DE*)malloc(vcb->blockSize);
-    LBAread(dir, 1,blockNum);
+    DE *dir = (DE*)malloc(vcb->blockSize*blocksNeeded);
+    LBAread(dir, blocksNeeded,blockNum);
     return dir;
 }
 
@@ -110,13 +112,14 @@ DE *loadDirByLoc(int loc)
     {
         return NULL;
     }
-    DE *dir = (DE *)malloc(vcb->blockSize);
-    LBAread(dir, 1, loc);
+    int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
+    DE *dir = (DE *)malloc(vcb->blockSize*blocksNeeded);
+    LBAread(dir, blocksNeeded, loc);
     return dir;
 }
 //    printf("\n\n test: \n\n");
 
-int parsePath(char *path, ppRetStruct *ppInfo){
+int parsePath( char *path, ppRetStruct *ppInfo){
 
     if(path == NULL){
         return 1;
@@ -193,8 +196,8 @@ void writeDir(DE *de){
         return;
     }
     int blockNum = de->loc;
-    int numBlocks = (de->size-vcb->blockSize)/vcb->blockSize;
-    LBAwrite(de,numBlocks,blockNum);
+    int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
+    LBAwrite(de,blocksNeeded,blockNum);
 
 }
 
@@ -211,18 +214,17 @@ int fs_mkdir(const char *pathname, mode_t mode){
         return -1;
     }
     int dirLoc = createDirectory(MAX_ENTRIES, ppInfo.Parent);
-    printf("deb: created Dir loc: %d\n\n",dirLoc);
+    printf("\ndeb: created Dir loc: %d\n",dirLoc);
 
-    DE *newDir = loadDirByLoc(dirLoc);
-    printf("deb: mkdir new dir is dir: %d\n",newDir->isDir);
-    
+    DE *newDir = loadDirByLoc(dirLoc);    
     int index = findUnusedDE(ppInfo.Parent);
-    printf("\n\n deb: index: %d\n\n", index);
+    printf("deb: index: %d\n", index);
     strcpy(ppInfo.Parent[index].name, ppInfo.lastElementName);
     ppInfo.Parent[index].size = newDir[0].size;
     printf("deb: mkdir last element name: %s\n", ppInfo.lastElementName);
-    printf("deb: mkdir new dir name in parent dir: %s\n", ppInfo.Parent[index].name);
+    printf("deb: mkdir new dir name in parent dir: %s\n\n", ppInfo.Parent[index].name);
 
+    printf("deb: mkdir parent dir index 0 names: %s\n", ppInfo.Parent[0].name);
     printf("deb: mkdir parent dir index 1 names: %s\n", ppInfo.Parent[1].name);
     printf("deb: mkdir parent dir index 2 names: %s\n", ppInfo.Parent[2].name);
     printf("deb: mkdir parent dir index 3 names: %s\n", ppInfo.Parent[3].name);

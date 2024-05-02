@@ -58,7 +58,8 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	vcb->blockSize = blockSize;
 	vcb->freeStart = 1;
 	vcb->freeSize = initFreeSpaceMap(vcb->numberOfBlocks, vcb->blockSize);
-	vcb->rootStart = createDirectory(MAX_ENTRIES, NULL); // eventually replace with a initRootDirectory
+	vcb->rootStart = createDirectory(MAX_ENTRIES, NULL); 
+	loadRoot();
 
 	LBAwrite(vcb,1,0);
 
