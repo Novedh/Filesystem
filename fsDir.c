@@ -32,8 +32,9 @@ extern VCB *vcb;
 void loadRoot(){
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
     root = (DE*)malloc(vcb->blockSize*blocksNeeded);
+    cwdString = (char*)malloc(MAX_FILENAME_LEN);
     LBAread(root,blocksNeeded,vcb->rootStart);
-    cwdString = "/";
+    strcpy(cwdString,"/");
     cwd = root;
 }
 
@@ -68,7 +69,7 @@ int createDirectory(int numEntries, DE *parent)
         myDir[1].size = myDir[0].size;
         root = myDir;
         cwd = myDir;
-        cwdString ="/";
+        
     }
     else
     {
@@ -80,7 +81,8 @@ int createDirectory(int numEntries, DE *parent)
     free(myDir);
     return loc;
 }
-
+// note: "." dirIndex[0] points to itself
+// note: ".." direIndex[1] points to prev
 
 int findInDir(DE *parent, char *string){
     
@@ -251,8 +253,8 @@ char *fs_getcwd(char *pathname, size_t size){
 int fs_setcwd(char *pathname){
     ppRetStruct ppInfo;
     int res = parsePath((char *)pathname, &ppInfo);
-    printf("deb: setcwd ppinfo last element name: %s \n",ppInfo.lastElementName);
-    printf("deb: setcwd ppinfo parent[2] loc: %s \n", ppInfo.Parent[2].loc);
+    printf("deb: setcwd ppinfo last element name: %s \n", ppInfo.lastElementName);
+    printf("deb: setcwd ppinfo last element index: %d \n", ppInfo.lastElementIndex);
 
     if (res == -1)
     {
@@ -270,12 +272,14 @@ int fs_setcwd(char *pathname){
     }
     DE *temp = loadDir(&ppInfo.Parent[ppInfo.lastElementIndex]);
 
+
     if(cwd!=root){
         free(cwd);
     }
     cwd = temp;
-    printf("Current Working Directory Updated to: %s\n", pathname);
-    printf("Current Working Directory String: %s\n", cwdString);
+    printf("deb: setcwd Current Working Directory Updated to: %s\n", pathname);
+    //printf("Current Working Directory String: %s\n", cwdString);
+    printf("deb: setcwd cwd loc: %ld\n", cwd->loc);
 
     //update the stringcwd
 
@@ -293,12 +297,14 @@ int fs_setcwd(char *pathname){
         }
         strcat(newPath,pathname);
     }
+    printf("deb: got to here 1\n");
     
     char *tokenVector[MAX_ENTRIES];
     char *savePtr;
     char *token = strtok_r(newPath, "/", &savePtr);
     int index = 0;
-    
+
+    printf("deb: got to here 2\n");
 
     while(token!=NULL){
         if(strcmp(token, ".")==0){
@@ -314,14 +320,21 @@ int fs_setcwd(char *pathname){
         }
         token = strtok_r(NULL,"/",&savePtr);
     }
+    printf("deb: got to here 3\n");
 
-    char *returnPath = malloc(strlen(cwdString)+2);
+    char *returnPath = (char *)malloc(MAX_FILENAME_LEN);
     strcpy(returnPath,"/");
     for(int i =0; i<index;i++){
         strcat(returnPath,tokenVector[i]);
         strcat(returnPath,"/");
     }
+    printf("deb: got to here 4\n");
+    printf("deb: cwdString: %s\n",cwdString);
+    printf("deb: returnPath: %s\n",returnPath);
+
     strcpy(cwdString, returnPath);
+    printf("deb: got to here 5\n");
+
     free(returnPath);
     free(newPath);
     return 0;
