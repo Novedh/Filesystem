@@ -35,7 +35,7 @@ void loadRoot(){
     cwdString = (char*)malloc(MAX_FILENAME_LEN);
     cwd = (DE *)malloc(vcb->blockSize * blocksNeeded);
     LBAread(root,blocksNeeded,vcb->rootStart);
-    strcpy(cwdString,"/");
+    strcpy(cwdString,".");
     cwd = root;
 }
 
@@ -281,6 +281,7 @@ int fs_setcwd(char *pathname){
     printf("deb: setcwd Current Working Directory Updated to: %s\n", pathname);
     //printf("Current Working Directory String: %s\n", cwdString);
     printf("deb: setcwd cwd loc: %ld\n", cwd->loc);
+    printf("deb: setcwd cwd name: %s\n", cwd->name);
 
     //update the stringcwd
 
