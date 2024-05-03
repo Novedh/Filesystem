@@ -122,6 +122,23 @@ DE *loadDirByLoc(int loc)
 }
 //    printf("\n\n test: \n\n");
 
+DE * getDEInfo (char * filename){
+    ppRetStruct ppInfo;
+
+    int res = parsePath(filename,&ppInfo);
+    if(res == -1){
+        return 0;
+    }
+    if (ppInfo.lastElementIndex == -1)
+    {
+        return -1;
+    }
+
+    DE *de = &ppInfo.Parent[ppInfo.lastElementIndex];
+    //  isDir 0 means file & 1 means directory
+    return de;
+}
+
 int parsePath( char *path, ppRetStruct *ppInfo){
 
     if(path == NULL){

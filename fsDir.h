@@ -33,6 +33,7 @@ int createDirectory(int numEntries, DE *parent);
 int findInDir(DE *parent, char *string);
 DE *loadDir(DE *de);
 DE *loadDirByLoc(int loc);
+DE *getDEInfo(char * filename);
 void loadRoot();
 int parsePath(char *path, ppRetStruct *ppInfo);
 int findUnusedDE(DE *dir);

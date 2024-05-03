@@ -20,7 +20,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "b_io.h"
-
+#include "global.h"
+#include "fsDir.h"
 
 #define MAXFCBS 20
 #define B_CHUNK_SIZE 512
@@ -28,6 +29,7 @@
 typedef struct b_fcb
 	{
 	/** TODO add al the information you need in the file control block **/
+	DE * fi;
 	char * buf;		//holds the open file buffer
 	int index;		//holds the current position in the buffer
 	int buflen;		//holds how many valid bytes are in the buffer
@@ -70,16 +72,16 @@ b_io_fd b_getFCB ()
 b_io_fd b_open (char * filename, int flags)
 	{
 	b_io_fd returnFd;
-	/*
 	
-	fileInfo * fi;
+	
+	DE * fi;
 
 	//*** TODO ***:  Modify to save or set any information needed
 	//
 	//
 		
 	if (startup == 0) b_init();  //Initialize our system
-	fi = GetFileInfo (filename);
+	fi = getDEInfo (filename);
 	
 	if (fi == NULL)
 	{
@@ -94,13 +96,13 @@ b_io_fd b_open (char * filename, int flags)
 	}
 
 	returnFd = b_getFCB();
-	//fcbArray[returnFd].fi = fi;
+	fcbArray[returnFd].fi = fi;
 	fcbArray[returnFd].buf = buf;
 	fcbArray[returnFd].index = 0;
 	fcbArray[returnFd].buflen = 0;
 	fcbArray[returnFd].currentBlk = 0;
-	//fcbArray[returnFd].numBlocks = (fi->fileSize + (B_CHUNK_SIZE -1)) / B_CHUNK_SIZE;
-	*/
+	fcbArray[returnFd].numBlocks = (fi->size + (B_CHUNK_SIZE -1)) / B_CHUNK_SIZE;
+	
 
 	
 	
@@ -163,7 +165,7 @@ int b_write (b_io_fd fd, char * buffer, int count)
 //  +-------------+------------------------------------------------+--------+
 int b_read (b_io_fd fd, char * buffer, int count)
 	{
-		/*
+		
 		
 
 		int bytesRead;
@@ -190,9 +192,9 @@ int b_read (b_io_fd fd, char * buffer, int count)
 	remainingBytesInMyBuffer = fcbArray[fd].buflen - fcbArray[fd].index;
 
 	int amountAlreadyDelivered = (fcbArray[fd].currentBlk * B_CHUNK_SIZE);
-	if ((count + amountAlreadyDelivered) > fcbArray[fd].fi->fileSize)
+	if ((count + amountAlreadyDelivered) > fcbArray[fd].fi->size)
 	{
-		count = fcbArray[fd].fi->fileSize - amountAlreadyDelivered;
+		count = fcbArray[fd].fi->size - amountAlreadyDelivered;
 
 		if (count < 0)
 		{
@@ -226,7 +228,7 @@ int b_read (b_io_fd fd, char * buffer, int count)
 
 	if (part2 > 0)
 	{
-		bytesRead = LBAread (buffer+part1, numberOfBlocksToCopy, fcbArray[fd].currentBlk + fcbArray[fd].fi->location);
+		bytesRead = LBAread (buffer+part1, numberOfBlocksToCopy, fcbArray[fd].currentBlk + fcbArray[fd].fi->loc);
 
 		fcbArray[fd].currentBlk += numberOfBlocksToCopy;
 		part2 = bytesRead * B_CHUNK_SIZE;
@@ -234,7 +236,7 @@ int b_read (b_io_fd fd, char * buffer, int count)
 
 	if (part3 > 0)
 	{
-		bytesRead = LBAread (fcbArray[fd].buf, 1, fcbArray[fd].currentBlk + fcbArray[fd].fi->location);
+		bytesRead = LBAread (fcbArray[fd].buf, 1, fcbArray[fd].currentBlk + fcbArray[fd].fi->loc);
 
 		bytesRead = bytesRead * B_CHUNK_SIZE;
 
@@ -258,18 +260,18 @@ int b_read (b_io_fd fd, char * buffer, int count)
 	bytesReturned = part1 + part2 + part3;
 
 	return(bytesReturned);
-	*/
-		
-		
-	
-	
-	
-	
-	
-	
 	
 		
-	return (0);	//Change this
+		
+	
+	
+	
+	
+	
+	
+	
+		
+	
 	}
 	
 // Interface to Close the file	
