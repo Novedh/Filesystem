@@ -513,3 +513,68 @@ fdDir *fs_opendir(const char *pathname)
 
     return dirp;
 }
+
+struct fs_diriteminfo *fs_readdir(fdDir *dirp){
+    if(dirp == NULL){
+        return NULL;
+    }
+    if(dirp->directory == NULL){
+        return NULL;
+    }
+
+    DE *dir = dirp->directory;
+
+    if(dirp->dirEntryPosition >= MAX_ENTRIES){
+        return NULL;
+    }
+    while(strcmp(dir[dirp->dirEntryPosition].name,"")==0){
+        if(dirp->dirEntryPosition>=MAX_ENTRIES){
+            return NULL;
+        }
+        dirp->dirEntryPosition++;
+    }
+
+    struct fs_diriteminfo * diriteminfo = dirp->di;
+    strcpy(diriteminfo->d_name,dir[dirp->dirEntryPosition].name);
+    diriteminfo->d_reclen = dir[dirp->dirEntryPosition].size;
+    diriteminfo->fileType = dir[dirp->dirEntryPosition].isDir;
+
+    dirp->dirEntryPosition++;
+    return diriteminfo;
+}
+
+
+int fs_closedir(fdDir *dirp){
+    if(dirp ==NULL){
+        return -1;
+    }
+    if(dirp->directory){
+        free(dirp->directory);
+    }
+    if(dirp->di){
+        free(dirp->di);
+    }
+    free(dirp);
+    return 0;
+}
+
+int fs_stat(const char *path, struct fs_stat *buf){
+
+    ppRetStruct ppInfo;
+    int res = parsePath(path, &ppInfo);
+    if(res == -1){
+        return -1;
+    }
+    if(ppInfo.lastElementIndex == -1){
+        return -1;
+    }
+
+    DE *de = &ppInfo.Parent[ppInfo.lastElementIndex];
+
+    buf->st_size = de->size;
+    buf->st_accesstime = de->accessTime;
+    buf->st_modtime = de->modTime;
+    buf->st_createtime = de->createTime;
+
+    return 0;
+}
