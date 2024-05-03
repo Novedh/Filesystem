@@ -33,6 +33,7 @@ void loadRoot(){
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
     root = (DE*)malloc(vcb->blockSize*blocksNeeded);
     cwdString = (char*)malloc(MAX_FILENAME_LEN);
+    cwd = (DE *)malloc(vcb->blockSize * blocksNeeded);
     LBAread(root,blocksNeeded,vcb->rootStart);
     strcpy(cwdString,"/");
     cwd = root;
