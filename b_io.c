@@ -130,6 +130,14 @@ int b_seek (b_io_fd fd, off_t offset, int whence)
 // Interface to write function	
 int b_write (b_io_fd fd, char * buffer, int count)
 	{
+		int bytesRead;
+		int bytesReturned;
+		int part1, part2, part3;
+		int numberOfBlocksToCopy;
+		int remainingBytesInMyBuffer;
+		int allocatedBytes;
+		
+
 	if (startup == 0) b_init();  //Initialize our system
 
 	// check that fd is between 0 and (MAXFCBS-1)
@@ -139,7 +147,88 @@ int b_write (b_io_fd fd, char * buffer, int count)
 		}
 		
 		
-	return (0); //Change this
+	if (fcbArray[fd].fi == NULL)
+	{
+		return(-1);
+	}
+	
+
+	remainingBytesInMyBuffer = fcbArray[fd].buflen - fcbArray[fd].index;
+
+	int amountAlreadyDelivered = (fcbArray[fd].currentBlk * B_CHUNK_SIZE);
+	if ((count + amountAlreadyDelivered) > fcbArray[fd].fi->size)
+	{
+		
+		int blocksNeeded = ((count + amountAlreadyDelivered) - fcbArray[fd].fi->size + (B_CHUNK_SIZE -1)) / B_CHUNK_SIZE;
+		int loc = allocateBlocks(blocksNeeded);
+
+
+		if (count < 0)
+		{
+			printf("ERROR");
+		}
+	}
+
+	if (remainingBytesInMyBuffer >= count)
+	{
+		part1 = count;
+		part2 = 0;
+		part3 = 0;
+	}
+	else
+	{
+		part1 = remainingBytesInMyBuffer;
+
+		part3 = count - remainingBytesInMyBuffer;
+
+		numberOfBlocksToCopy = part3 / B_CHUNK_SIZE;
+		part2 = numberOfBlocksToCopy * B_CHUNK_SIZE;
+
+		part3 = part3 - part2;
+	}
+
+	if (part1 > 0)
+	{
+		memcpy (fcbArray[fd].buf + fcbArray[fd].index, buffer, part1);
+		fcbArray[fd].index = fcbArray[fd].index + part1;
+	}
+
+	if (part2 > 0)
+	{
+		bytesRead = LBAwrite (buffer+part1, numberOfBlocksToCopy, fcbArray[fd].currentBlk + fcbArray[fd].fi->loc);
+		
+
+		fcbArray[fd].currentBlk += numberOfBlocksToCopy;
+		part2 = bytesRead * B_CHUNK_SIZE;
+	}
+
+	if (part3 > 0)
+	{
+		bytesRead = LBAwrite (fcbArray[fd].buf, 1, fcbArray[fd].currentBlk + fcbArray[fd].fi->loc);
+
+		bytesRead = bytesRead * B_CHUNK_SIZE;
+
+		fcbArray[fd].currentBlk += 1;
+
+		fcbArray[fd].index = 0;
+		fcbArray[fd].buflen = bytesRead;
+
+		if (bytesRead < part3)
+		{
+			part3 = bytesRead;
+		}
+
+		if (part3 > 0)
+		{
+
+			memcpy(fcbArray[fd].buf + fcbArray[fd].index, buffer+part1+part2, part3);
+			fcbArray[fd].index = fcbArray[fd].index + part3;
+		}
+	}
+
+	bytesReturned = part1 + part2 + part3;
+
+	return(bytesReturned);
 	}
 
 
@@ -165,9 +254,6 @@ int b_write (b_io_fd fd, char * buffer, int count)
 //  +-------------+------------------------------------------------+--------+
 int b_read (b_io_fd fd, char * buffer, int count)
 	{
-		
-		
-
 		int bytesRead;
 		int bytesReturned;
 		int part1, part2, part3;
@@ -260,22 +346,10 @@ int b_read (b_io_fd fd, char * buffer, int count)
 	bytesReturned = part1 + part2 + part3;
 
 	return(bytesReturned);
-	
-		
-		
-	
-	
-	
-	
-	
-	
-	
-		
-	
 	}
 	
 // Interface to Close the file	
 int b_close (b_io_fd fd)
 	{
-
+		
 	}
