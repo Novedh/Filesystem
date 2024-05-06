@@ -71,7 +71,6 @@ b_io_fd b_getFCB ()
 // O_RDONLY, O_WRONLY, or O_RDWR
 b_io_fd b_open (char * filename, int flags)
 	{
-	printf("Debug: b_open called with filename: %s\n", filename);
 
 	b_io_fd returnFd;
 	DE * fi;
@@ -88,13 +87,12 @@ b_io_fd b_open (char * filename, int flags)
 	{
 		int fileLoc = makeFile(filename,100);
 		fi = getDEInfo(filename);
-	} else if (!fs_isDir)	{
-		printf("DEBUG: ERROR THIS IS A DIRECTORY NOT A FILE \n");
+	} else if (!fs_isDir(filename))	{
+		printf("ERROR THIS IS A DIRECTORY NOT A FILE \n");
 		return -1;
 	}
 	
 
-	printf("Debug: getDEInfo return: %p\n", (void*)fi);
 	
 	
 	if (fi == NULL)
@@ -114,10 +112,8 @@ b_io_fd b_open (char * filename, int flags)
 	
 
 	returnFd = b_getFCB();
-	printf("Debug: b_getFCB return: %d\n", returnFd);
 	
 
-	printf("Debug: DE size return: %u\n", fi->size);
 	fcbArray[returnFd].fi = fi;
 	fcbArray[returnFd].buf = buf;
 	fcbArray[returnFd].index = 0;
@@ -125,7 +121,6 @@ b_io_fd b_open (char * filename, int flags)
 	fcbArray[returnFd].currentBlk = 0;
 	fcbArray[returnFd].numBlocks = (fi->size + (B_CHUNK_SIZE -1)) / B_CHUNK_SIZE;
 	
-	printf("Debug: b_open succesfull, returning FD: %d\n", returnFd);
 	return (returnFd);						// all set
 	}
 

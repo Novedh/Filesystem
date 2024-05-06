@@ -21,7 +21,7 @@
 #include "global.h"
 #include "bitMap.h"
 
-
+// to check hexdump Hexdump/hexdump.linuxM1 SampleVolume --start 2 --count 5
 unsigned char *freeSpaceMap;
 
 void loadFSM()

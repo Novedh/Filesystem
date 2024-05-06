@@ -29,6 +29,7 @@
 #include "mfs.h"
 #include "global.h"
 #include "b_io.h"
+#include "fsDir.h"
 
 #define PERMISSIONS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 

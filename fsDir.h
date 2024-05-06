@@ -35,7 +35,7 @@ DE *loadDir(DE *de);
 DE *loadDirByLoc(int loc);
 DE *getDEInfo(char * filename);
 void loadRoot();
-int parsePath(char *path, ppRetStruct *ppInfo);
+int parsePath(const char *path, ppRetStruct *ppInfo);
 int findUnusedDE(DE *dir);
 void writeDir(DE *de);
 int fs_move(char *srcPath, char *destPath);
