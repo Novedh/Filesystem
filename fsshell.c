@@ -376,7 +376,6 @@ int cmd_mv (int argcnt, char *argvec[])
 	char * destinationPath = argvec[2];
 
 	int result = fs_move(sourcePath,destinationPath);
-	printf("0 is success: %d\n", result);
 
 	return result;	
 #endif

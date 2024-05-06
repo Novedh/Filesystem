@@ -213,18 +213,15 @@ int parsePath( const char *path, ppRetStruct *ppInfo){
         startParent = cwd;
     }
     DE *parent = startParent;
-    char *pathcpy = strdup(path);
-    char *token = strtok(pathcpy,"/");
+    char *token = strtok(path,"/");
     if(token == NULL){
         if(path[0]!='/'){
-            free(pathcpy);
             return -1;
         }
         else{
             ppInfo->lastElementIndex=-1;
             ppInfo->lastElementName = NULL;
             ppInfo->Parent = parent;
-            free(pathcpy);
             return 0;
         }
     }
@@ -237,19 +234,16 @@ int parsePath( const char *path, ppRetStruct *ppInfo){
             ppInfo->lastElementName = token;
             ppInfo->lastElementIndex = index;
             ppInfo->Parent = parent;
-            free(pathcpy);
             return 0;
         }
         if (index == -1)
         {
             printf("Could not find in Dir \n");
-            free(pathcpy);
             return -1;
         }
         if (&parent[index].isDir == 0)
         {
             printf("Parent is not a directory\n");
-            free(pathcpy);
             return -1;
         }
         DE *tempParent = loadDir(&parent[index]);
@@ -260,7 +254,8 @@ int parsePath( const char *path, ppRetStruct *ppInfo){
         parent = tempParent;
         token = token2;
     }
-    free(pathcpy);
+    
+    
 }
 
 int findUnusedDE(DE *dir)
