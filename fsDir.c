@@ -28,7 +28,8 @@ DE *cwd;
 char *cwdString;
 extern VCB *vcb;
 
-
+// this function will load root from disk back into memory when the FS is restarted
+// and also allocate and set the cwd to root
 void loadRoot(){
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
     root = (DE*)malloc(vcb->blockSize*blocksNeeded);
@@ -163,6 +164,7 @@ DE *getDEInfo(char *filename)
 // note: "." dirIndex[0] points to itself
 // note: ".." direIndex[1] points to prev
 
+// returns the DE location of a file/directory within the given directory
 int findInDir(DE *parent, char *string){
     
     if(parent == NULL || string == NULL){
@@ -176,6 +178,7 @@ int findInDir(DE *parent, char *string){
     return -1; //not found
 }
 
+// these functions load the directory from disk to memory
 DE *loadDir(DE *de){
     if (de == NULL){
         return NULL;
@@ -201,7 +204,8 @@ DE *loadDirByLoc(int loc)
 //    printf("\n\n test: \n\n");
 
 
-
+// alters the ppInfo struct passed in the function to store needed information for directory
+// traversing, creating, and removing DE's in the filesystem.
 int parsePath( char *path, ppRetStruct *ppInfo){
 
     if(path == NULL){
@@ -225,7 +229,7 @@ int parsePath( char *path, ppRetStruct *ppInfo){
             return -1;
         }
         else{
-            ppInfo->lastElementIndex=-2;
+            ppInfo->lastElementIndex=-1;
             ppInfo->lastElementName = NULL;
             ppInfo->Parent = parent;
             return 0;
@@ -287,7 +291,7 @@ void writeDir(DE *de){
 
 }
 
-
+// makes a new directory and updates the parent directory 
 int fs_mkdir(const char *pathname, mode_t mode){
     ppRetStruct ppInfo;
 
@@ -327,12 +331,13 @@ int fs_mkdir(const char *pathname, mode_t mode){
 
     writeDir(ppInfo.Parent);
 }
-
+// returns the path that the filesystem is currently on
 char *fs_getcwd(char *pathname, size_t size){
     strncpy(pathname, cwdString, size);
     return cwdString;
 }
 
+// for cd, used to change the cwd and update stringcwd
 int fs_setcwd(char *pathname){
     ppRetStruct ppInfo;
     int res = parsePath((char *)pathname, &ppInfo);
@@ -362,7 +367,7 @@ int fs_setcwd(char *pathname){
     cwd = temp;
     printf("deb: setcwd Current Working Directory Updated to: %s\n", pathname);
     //printf("Current Working Directory String: %s\n", cwdString);
-    printf("deb: setcwd cwd loc: %ld\n", cwd->loc);
+    printf("deb: setcwd cwd loc: %d\n", cwd->loc);
     printf("deb: setcwd cwd name: %s\n", cwd->name);
 
     //update the stringcwd
@@ -424,6 +429,8 @@ int fs_setcwd(char *pathname){
     return 0;
 }
 
+// removes the direcotry from the parent and frees the blocks 
+// associated with it so they may be reused
 int fs_rmdir(const char *pathname){
     ppRetStruct ppInfo;
     printf("deb: rmdir start---\n");
@@ -522,6 +529,7 @@ int fs_isDir(char *pathname){
     }
 }
 
+// removed the file from parent direcotry and frees blocks associated with it
 int fs_delete(char *filename)
 {
     ppRetStruct ppInfo;
@@ -554,6 +562,7 @@ int fs_delete(char *filename)
     return 0;
 }
 
+// opens the directory so that it may be read and returns a pointer to that directory
 fdDir *fs_opendir(const char *pathname)
 {
     ppRetStruct ppInfo;
@@ -597,6 +606,7 @@ fdDir *fs_opendir(const char *pathname)
     return dirp;
 }
 
+// this reads and returns the next occupied DE from the directory
 struct fs_diriteminfo *fs_readdir(fdDir *dirp){
     if(dirp == NULL){
         return NULL;
