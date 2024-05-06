@@ -641,6 +641,53 @@ int fs_closedir(fdDir *dirp){
     return 0;
 }
 
+int fs_move(char *srcPath, char *destPath)
+{
+    ppRetStruct srcppInfo;
+    int res = parsePath(srcPath, &srcppInfo);
+    if (res == -1)
+    {
+        return -1;
+    }
+    if (srcppInfo.lastElementIndex == -1)
+    {
+        return -1;
+    }
+
+    DE *srcde = &srcppInfo.Parent[srcppInfo.lastElementIndex];
+
+    ppRetStruct destppInfo;
+    res = parsePath(destPath, &destppInfo);
+    if (res == -1)
+    {
+        return -1;
+    }
+    if (destppInfo.lastElementIndex == -1)
+    {
+        return -1;
+    }
+
+    DE *destde = loadDir(&destppInfo.Parent[destppInfo.lastElementIndex]);
+    int index = findUnusedDE(destde);
+
+    strcpy(destde[index].name, srcde->name);
+    destde[index].size = srcde->size;
+    destde[index].loc = srcde->loc;
+    destde[index].isDir = srcde->isDir;
+    destde[index].createTime = srcde->createTime;
+
+    strcpy(srcde->name, "");
+    destde[index].size = 0;
+    destde[index].loc = 0;
+    destde[index].isDir = 0;
+    destde[index].createTime = 0;
+
+    writeDir(destde);
+    writeDir(srcppInfo.Parent);
+
+    return 0;
+}
+
 int fs_stat(const char *path, struct fs_stat *buf){
 
     ppRetStruct ppInfo;
