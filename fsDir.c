@@ -35,7 +35,7 @@ void loadRoot(){
     cwdString = (char*)malloc(MAX_FILENAME_LEN);
     cwd = (DE *)malloc(vcb->blockSize * blocksNeeded);
     LBAread(root,blocksNeeded,vcb->rootStart);
-    strcpy(cwdString,".");
+    strcpy(cwdString,"/");
     cwd = root;
 }
 
@@ -82,6 +82,84 @@ int createDirectory(int numEntries, DE *parent)
     free(myDir);
     return loc;
 }
+
+int createFile(int fileSize, DE *parent)
+{
+
+    int blocksNeeded = (fileSize + vcb->blockSize - 1) / vcb->blockSize;
+    int bytesNeeded = blocksNeeded * vcb->blockSize;
+
+    int loc = allocateBlocks(blocksNeeded);
+    DE *myFile = (DE *)malloc(sizeof(DE));
+
+    strcpy(myFile->name, "myFile");
+    myFile->size = fileSize;
+    myFile->loc = loc;
+    myFile->isDir = 0;
+
+    LBAwrite(myFile, blocksNeeded, loc);
+    free(myFile);
+    return loc;
+}
+
+int makeFile(char *pathname, int fileSize)
+{
+    ppRetStruct ppInfo;
+
+    int res = parsePath((char *)pathname, &ppInfo);
+
+    if (res == -1)
+    {
+        return -1;
+    }
+    if (ppInfo.lastElementIndex != -1)
+    {
+        return -1;
+    }
+
+    int fileLoc = createFile(fileSize, ppInfo.Parent);
+    printf("\ndeb: created File loc: %d\n", fileLoc);
+
+    DE *newFile = loadDirByLoc(fileLoc);
+    int index = findUnusedDE(ppInfo.Parent);
+    printf("deb: index: %d\n", index);
+
+    strcpy(ppInfo.Parent[index].name, ppInfo.lastElementName);
+    ppInfo.Parent[index].size = newFile[0].size;
+    ppInfo.Parent[index].isDir = newFile[0].isDir;
+    ppInfo.Parent[index].loc = newFile[0].loc;
+    ppInfo.Parent[index].createTime = newFile[0].createTime;
+
+    printf("deb: mkdir ppinfo[index].loc: %d\n", ppInfo.Parent[index].loc);
+
+    printf("deb: mkdir last element name: %s\n", ppInfo.lastElementName);
+    printf("deb: mkdir new dir name in parent dir: %s\n\n", ppInfo.Parent[index].name);
+
+    printf("deb: mkdir parent dir index 0 names: %s\n", ppInfo.Parent[0].name);
+
+    writeDir(ppInfo.Parent);
+    return fileLoc;
+}
+
+DE *getDEInfo(char *filename)
+{
+    ppRetStruct ppInfo;
+
+    int res = parsePath(filename, &ppInfo);
+    if (res == -1)
+    {
+        return NULL; // Invalid Path
+    }
+    if (ppInfo.lastElementIndex == -1)
+    {
+        return NULL; // Not Found
+    }
+
+    DE *de = &ppInfo.Parent[ppInfo.lastElementIndex];
+
+    return de;
+}
+
 // note: "." dirIndex[0] points to itself
 // note: ".." direIndex[1] points to prev
 
@@ -122,22 +200,7 @@ DE *loadDirByLoc(int loc)
 }
 //    printf("\n\n test: \n\n");
 
-DE * getDEInfo (char * filename){
-    ppRetStruct ppInfo;
 
-    int res = parsePath(filename,&ppInfo);
-    if(res == -1){
-        return 0;
-    }
-    if (ppInfo.lastElementIndex == -1)
-    {
-        return -1;
-    }
-
-    DE *de = &ppInfo.Parent[ppInfo.lastElementIndex];
-    //  isDir 0 means file & 1 means directory
-    return de;
-}
 
 int parsePath( char *path, ppRetStruct *ppInfo){
 
@@ -181,10 +244,12 @@ int parsePath( char *path, ppRetStruct *ppInfo){
         }
         if (index == -1)
         {
+            printf("Could not find in Dir \n");
             return -1;
         }
         if (&parent[index].isDir == 0)
         {
+            printf("Debug: Parent is not a directory\n");
             return -1;
         }
         DE *tempParent = loadDir(&parent[index]);

@@ -71,31 +71,53 @@ b_io_fd b_getFCB ()
 // O_RDONLY, O_WRONLY, or O_RDWR
 b_io_fd b_open (char * filename, int flags)
 	{
+	printf("Debug: b_open called with filename: %s\n", filename);
+
 	b_io_fd returnFd;
-	
-	
 	DE * fi;
+	
 
 	//*** TODO ***:  Modify to save or set any information needed
 	//
 	//
 		
 	if (startup == 0) b_init();  //Initialize our system
+	
 	fi = getDEInfo (filename);
+	if (fi == NULL)
+	{
+		int fileLoc = makeFile(filename,100);
+		fi = getDEInfo(filename);
+	} else if (fs_isDir)	{
+		printf("DEBUG: ERROR THIS IS A DIRECTORY NOT A FILE \n");
+		return -1;
+	}
+	
+
+	printf("Debug: getDEInfo return: %p\n", (void*)fi);
+	
 	
 	if (fi == NULL)
 	{
+		printf("Error: File Info Entry is null \n");
 		return (-1);
 	}
+	
 	
 
 	char * buf = malloc (B_CHUNK_SIZE);
 	if (buf == NULL)
 	{
+		printf("Error: Buffer memory allocation failed \n");
 		return(-999);
 	}
+	
 
 	returnFd = b_getFCB();
+	printf("Debug: b_getFCB return: %d\n", returnFd);
+	
+
+	printf("Debug: DE size return: %u\n", fi->size);
 	fcbArray[returnFd].fi = fi;
 	fcbArray[returnFd].buf = buf;
 	fcbArray[returnFd].index = 0;
@@ -103,9 +125,7 @@ b_io_fd b_open (char * filename, int flags)
 	fcbArray[returnFd].currentBlk = 0;
 	fcbArray[returnFd].numBlocks = (fi->size + (B_CHUNK_SIZE -1)) / B_CHUNK_SIZE;
 	
-
-	
-	
+	printf("Debug: b_open succesfull, returning FD: %d\n", returnFd);
 	return (returnFd);						// all set
 	}
 
@@ -159,7 +179,7 @@ int b_write (b_io_fd fd, char * buffer, int count)
 	if ((count + amountAlreadyDelivered) > fcbArray[fd].fi->size)
 	{
 		
-		int blocksNeeded = ((count + amountAlreadyDelivered) - fcbArray[fd].fi->size + (B_CHUNK_SIZE -1)) / B_CHUNK_SIZE;
+		int blocksNeeded = ((count + amountAlreadyDelivered) - fcbArray[fd].fi->size + (B_CHUNK_SIZE -1) * 2) / B_CHUNK_SIZE;
 		int loc = allocateBlocks(blocksNeeded);
 
 
@@ -227,6 +247,8 @@ int b_write (b_io_fd fd, char * buffer, int count)
 	}
 
 	bytesReturned = part1 + part2 + part3;
+
+	fcbArray[fd].fi->size = fcbArray[fd].currentBlk * B_CHUNK_SIZE + fcbArray[fd].index;
 
 	return(bytesReturned);
 	}
@@ -351,5 +373,6 @@ int b_read (b_io_fd fd, char * buffer, int count)
 // Interface to Close the file	
 int b_close (b_io_fd fd)
 	{
-		
+		writeDir(fcbArray[fd].fi);
+		return 0;
 	}
