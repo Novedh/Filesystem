@@ -8,7 +8,8 @@
  *
  * File:: bitMap.c
  *
- * Description::
+ * Description:: functions in charge of the functions of our bitmap
+ * such as seting, clearing, geting bits and initaliazing our bitmap.
  *
  **************************************************************/
 

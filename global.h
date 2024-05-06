@@ -8,7 +8,8 @@
  *
  * File:: global.h
  *
- * Description:: file with vcb structure
+ * Description:: file that holds the structures that we use
+ * and the global variables we use in multiple source files
  *
  **************************************************************/
 

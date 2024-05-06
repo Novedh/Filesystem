@@ -8,7 +8,8 @@
  *
  * File:: fsDir.c
  *
- * Description::
+ * Description:: the functions in charge of crating files/directories and
+ * traversing our file system.
  *
  **************************************************************/
 
@@ -155,9 +156,11 @@ DE *getDEInfo(char *filename)
 // note: "." dirIndex[0] points to itself
 // note: ".." direIndex[1] points to prev
 
-// returns the DE location of a file/directory within the given directory
-int findInDir(DE *parent, char *string){
-    
+// returns the DE location of a file/directory within the directory using its name
+    int
+    findInDir(DE *parent, char *string)
+{
+
     if(parent == NULL || string == NULL){
         return -1;
     }

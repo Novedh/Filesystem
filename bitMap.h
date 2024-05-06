@@ -8,7 +8,7 @@
  *
  * File:: bitMap.h
  *
- * Description::
+ * Description:: function declarations for our bitmap source file
  *
  **************************************************************/
 
