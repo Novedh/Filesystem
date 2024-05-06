@@ -88,7 +88,7 @@ b_io_fd b_open (char * filename, int flags)
 	{
 		int fileLoc = makeFile(filename,100);
 		fi = getDEInfo(filename);
-	} else if (fs_isDir)	{
+	} else if (!fs_isDir)	{
 		printf("DEBUG: ERROR THIS IS A DIRECTORY NOT A FILE \n");
 		return -1;
 	}

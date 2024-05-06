@@ -257,7 +257,6 @@ int cmd_touch (int argcnt, char *argvec[])
 
 		
         testfs_src_fd = b_open (src, O_WRONLY | O_CREAT);
-		
         if (testfs_src_fd < 0)
 	    return (testfs_src_fd);	//return with error
 
@@ -365,8 +364,20 @@ int cmd_cp (int argcnt, char *argvec[])
 int cmd_mv (int argcnt, char *argvec[])
 	{
 #if (CMDMV_ON == 1)				
-	return -99;
+	
 	// **** TODO ****  For you to implement	
+	if (argcnt != 3)
+		{
+		printf("Usage: mv source destination\n");
+		return -1;
+		}
+	char * sourcePath = argvec[1];
+	char * destinationPath = argvec[2];
+
+	int result = fs_move(sourcePath,destinationPath);
+	printf("0 is success: %d\n", result);
+
+	return result;	
 #endif
 	return 0;
 	}

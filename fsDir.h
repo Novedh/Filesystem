@@ -38,4 +38,5 @@ void loadRoot();
 int parsePath(char *path, ppRetStruct *ppInfo);
 int findUnusedDE(DE *dir);
 void writeDir(DE *de);
+int fs_move(char *srcPath, char *destPath);
 
