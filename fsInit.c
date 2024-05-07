@@ -34,42 +34,43 @@ VCB *vcb;
 
 // TODO: Define Directory Entry (DE) Struct
 
-	// TODO: Write init rootDirectory
-	// Return starting block number of root directory
+// TODO: Write init rootDirectory
+// Return starting block number of root directory
 
-int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
-	{
-	printf ("Initializing File System with %ld blocks with a block size of %ld\n", numberOfBlocks, blockSize);
-	/* TODO: Add any code you need to initialize your file system. */
-	
-	vcb = malloc(blockSize);
-	LBAread(vcb, 1, 0);
+int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
+{
+    printf("Initializing File System with %ld blocks with a block size of %ld\n", numberOfBlocks,
+           blockSize);
+    /* TODO: Add any code you need to initialize your file system. */
 
-	if(vcb->signature == SIGNATURE){
-		printf("Volume already initialized! \n");
-		loadFSM();
-		loadRoot();
-		return 0;
-	}
+    vcb = malloc(blockSize);
+    LBAread(vcb, 1, 0);
 
-	vcb->signature = SIGNATURE;
-	vcb->numberOfBlocks = numberOfBlocks;
-	vcb->blockSize = blockSize;
-	vcb->freeStart = 1;
-	vcb->freeSize = initFreeSpaceMap(vcb->numberOfBlocks, vcb->blockSize);
-	vcb->rootStart = createDirectory(MAX_ENTRIES, NULL); 
-	loadRoot();
+    if (vcb->signature == SIGNATURE)
+    {
+        printf("Volume already initialized! \n");
+        loadFSM();
+        loadRoot();
+        return 0;
+    }
 
-	LBAwrite(vcb,1,0);
+    vcb->signature = SIGNATURE;
+    vcb->numberOfBlocks = numberOfBlocks;
+    vcb->blockSize = blockSize;
+    vcb->freeStart = 1;
+    vcb->freeSize = initFreeSpaceMap(vcb->numberOfBlocks, vcb->blockSize);
+    vcb->rootStart = createDirectory(MAX_ENTRIES, NULL);
+    loadRoot();
 
-	return 0;
-	}
-	
-	
-void exitFileSystem ()
-	{
-		exitFreeMap();
-		LBAwrite(vcb, 1, 0);
-		free(vcb);
-		printf("System exiting\n");
-	}
+    LBAwrite(vcb, 1, 0);
+
+    return 0;
+}
+
+void exitFileSystem()
+{
+    exitFreeMap();
+    LBAwrite(vcb, 1, 0);
+    free(vcb);
+    printf("System exiting\n");
+}

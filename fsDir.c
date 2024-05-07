@@ -22,7 +22,7 @@
 #include "fsDir.h"
 #include "mfs.h"
 
-//pointer to current directory stored in memory
+// pointer to current directory stored in memory
 
 DE *root;
 DE *cwd;
@@ -31,19 +31,20 @@ extern VCB *vcb;
 
 // this function will load root from disk back into memory when the FS is restarted
 // and also allocate and set the cwd to root
-void loadRoot(){
+void loadRoot()
+{
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
-    root = (DE*)malloc(vcb->blockSize*blocksNeeded);
-    cwdString = (char*)malloc(MAX_FILENAME_LEN);
+    root = (DE *)malloc(vcb->blockSize * blocksNeeded);
+    cwdString = (char *)malloc(MAX_FILENAME_LEN);
     cwd = (DE *)malloc(vcb->blockSize * blocksNeeded);
-    LBAread(root,blocksNeeded,vcb->rootStart);
-    strcpy(cwdString,"/");
+    LBAread(root, blocksNeeded, vcb->rootStart);
+    strcpy(cwdString, "/");
     cwd = root;
 }
 
 int createDirectory(int numEntries, DE *parent)
 {
-    
+
     int spaceNeeded = numEntries * sizeof(DE);
     int blocksNeeded = (spaceNeeded + vcb->blockSize - 1) / vcb->blockSize;
     int bytesNeeded = blocksNeeded * vcb->blockSize;
@@ -72,7 +73,6 @@ int createDirectory(int numEntries, DE *parent)
         myDir[1].size = myDir[0].size;
         root = myDir;
         cwd = myDir;
-        
     }
     else
     {
@@ -157,86 +157,98 @@ DE *getDEInfo(char *filename)
 // note: ".." direIndex[1] points to prev
 
 // returns the DE location of a file/directory within the directory using its name
-    int
-    findInDir(DE *parent, char *string)
+int findInDir(DE *parent, char *string)
 {
 
-    if(parent == NULL || string == NULL){
+    if (parent == NULL || string == NULL)
+    {
         return -1;
     }
-    for (int i = 0; i < MAX_ENTRIES;i++){
-        if (strcmp(parent[i].name, string) == 0){
+    for (int i = 0; i < MAX_ENTRIES; i++)
+    {
+        if (strcmp(parent[i].name, string) == 0)
+        {
             return i;
         }
     }
-    return -1; //not found
+    return -1; // not found
 }
 
 // these functions load the directory from disk to memory
-DE *loadDir(DE *de){
-    if (de == NULL){
+DE *loadDir(DE *de)
+{
+    if (de == NULL)
+    {
         return NULL;
     }
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
     int blockNum = de->loc;
-    DE *dir = (DE*)malloc(vcb->blockSize*blocksNeeded);
-    LBAread(dir, blocksNeeded,blockNum);
+    DE *dir = (DE *)malloc(vcb->blockSize * blocksNeeded);
+    LBAread(dir, blocksNeeded, blockNum);
     return dir;
 }
 
 DE *loadDirByLoc(int loc)
 {
-    if (loc <0)
+    if (loc < 0)
     {
         return NULL;
     }
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
-    DE *dir = (DE *)malloc(vcb->blockSize*blocksNeeded);
+    DE *dir = (DE *)malloc(vcb->blockSize * blocksNeeded);
     LBAread(dir, blocksNeeded, loc);
     return dir;
 }
 
-
 // alters the ppInfo struct passed in the function to store needed information for directory
 // traversing, creating, and removing DE's in the filesystem.
-int parsePath( const char *path, ppRetStruct *ppInfo){
+int parsePath(const char *path, ppRetStruct *ppInfo)
+{
 
-    if(path == NULL){
+    if (path == NULL)
+    {
         return 1;
     }
-    if(ppInfo == NULL){
+    if (ppInfo == NULL)
+    {
         return 1;
     }
     DE *startParent;
     char *pathcpy = strdup(path);
 
-    //means given absolute path
-    if(pathcpy[0]=='/'){
+    // means given absolute path
+    if (pathcpy[0] == '/')
+    {
         startParent = root;
-    }else{
+    }
+    else
+    {
         startParent = cwd;
     }
     DE *parent = startParent;
-    
-    char *token = strtok(pathcpy,"/");
-    if(token == NULL){
+
+    char *token = strtok(pathcpy, "/");
+    if (token == NULL)
+    {
         if (pathcpy[0] != '/')
         {
             free(pathcpy);
             return -1;
         }
-        else{
-            ppInfo->lastElementIndex=-1;
+        else
+        {
+            ppInfo->lastElementIndex = -1;
             ppInfo->lastElementName = NULL;
             ppInfo->Parent = parent;
             free(pathcpy);
             return 0;
         }
     }
-    while(1){
-        int index = findInDir(parent,token);
+    while (1)
+    {
+        int index = findInDir(parent, token);
 
-        char *token2 = strtok(NULL,"/");
+        char *token2 = strtok(NULL, "/");
         if (token2 == NULL)
         {
             ppInfo->lastElementName = token;
@@ -279,31 +291,35 @@ int findUnusedDE(DE *dir)
     return -1; // no free directory entries
 }
 
-void writeDir(DE *de){
-    if(de == NULL){
+void writeDir(DE *de)
+{
+    if (de == NULL)
+    {
         return;
     }
     int blockNum = de->loc;
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
-    LBAwrite(de,blocksNeeded,blockNum);
-
+    LBAwrite(de, blocksNeeded, blockNum);
 }
 
-// makes a new directory and updates the parent directory 
-int fs_mkdir(const char *pathname, mode_t mode){
+// makes a new directory and updates the parent directory
+int fs_mkdir(const char *pathname, mode_t mode)
+{
     ppRetStruct ppInfo;
 
-    int res = parsePath((char*)pathname,&ppInfo);
-    
-    if(res == -1){
+    int res = parsePath((char *)pathname, &ppInfo);
+
+    if (res == -1)
+    {
         return -1;
     }
-    if(ppInfo.lastElementIndex!=-1){
+    if (ppInfo.lastElementIndex != -1)
+    {
         return -1;
     }
     int dirLoc = createDirectory(MAX_ENTRIES, ppInfo.Parent);
 
-    DE *newDir = loadDirByLoc(dirLoc);    
+    DE *newDir = loadDirByLoc(dirLoc);
     int index = findUnusedDE(ppInfo.Parent);
     strcpy(ppInfo.Parent[index].name, ppInfo.lastElementName);
     ppInfo.Parent[index].size = newDir[0].size;
@@ -311,20 +327,22 @@ int fs_mkdir(const char *pathname, mode_t mode){
     ppInfo.Parent[index].loc = newDir[0].loc;
     ppInfo.Parent[index].createTime = newDir[0].createTime;
     ppInfo.Parent[index].size = newDir[0].size;
- 
+
     writeDir(ppInfo.Parent);
 }
 // returns the path that the filesystem is currently on
-char *fs_getcwd(char *pathname, size_t size){
+char *fs_getcwd(char *pathname, size_t size)
+{
     strncpy(pathname, cwdString, size);
     return cwdString;
 }
 
 // for cd, used to change the cwd and update stringcwd
-int fs_setcwd(char *pathname){
+int fs_setcwd(char *pathname)
+{
     ppRetStruct ppInfo;
     int res = parsePath((char *)pathname, &ppInfo);
-    
+
     if (res == -1)
     {
         return -1;
@@ -333,61 +351,74 @@ int fs_setcwd(char *pathname){
     {
         return -1;
     }
-    if(!ppInfo.Parent[ppInfo.lastElementIndex].isDir){
+    if (!ppInfo.Parent[ppInfo.lastElementIndex].isDir)
+    {
         return -1;
     }
     DE *temp = loadDir(&ppInfo.Parent[ppInfo.lastElementIndex]);
 
-
-    if(cwd!=root){
+    if (cwd != root)
+    {
         free(cwd);
     }
     cwd = temp;
 
-    //update the stringcwd
+    // update the stringcwd
 
     char *newPath;
 
-    if(pathname[0]=='/'){
+    if (pathname[0] == '/')
+    {
         newPath = strdup(pathname);
-    }else{
+    }
+    else
+    {
         int len1 = strlen(cwdString);
         int len2 = strlen(pathname);
-        newPath = malloc(len1+len2+2);
-        strcpy(newPath,cwdString);
-        if(newPath[len1-1]!= '/'){
-            strcat(newPath,"/");
+        newPath = malloc(len1 + len2 + 2);
+        strcpy(newPath, cwdString);
+        if (newPath[len1 - 1] != '/')
+        {
+            strcat(newPath, "/");
         }
-        strcat(newPath,pathname);
+        strcat(newPath, pathname);
     }
-    
+
     char *tokenVector[MAX_ENTRIES];
     char *savePtr;
     char *token = strtok_r(newPath, "/", &savePtr);
     int index = 0;
 
-    while(token!=NULL){
-        if(strcmp(token, ".")==0){
+    while (token != NULL)
+    {
+        if (strcmp(token, ".") == 0)
+        {
             token = strtok_r(NULL, "/", &savePtr);
             continue;
-        }else if(strcmp(token,"..")==0){
-            if(index>0){
+        }
+        else if (strcmp(token, "..") == 0)
+        {
+            if (index > 0)
+            {
                 index--;
             }
-        }else{
+        }
+        else
+        {
             tokenVector[index] = token;
             index++;
         }
-        token = strtok_r(NULL,"/",&savePtr);
+        token = strtok_r(NULL, "/", &savePtr);
     }
 
     char *returnPath = (char *)malloc(MAX_FILENAME_LEN);
-    strcpy(returnPath,"/");
-    for(int i =0; i<index;i++){
-        strcat(returnPath,tokenVector[i]);
-        strcat(returnPath,"/");
+    strcpy(returnPath, "/");
+    for (int i = 0; i < index; i++)
+    {
+        strcat(returnPath, tokenVector[i]);
+        strcat(returnPath, "/");
     }
- 
+
     strcpy(cwdString, returnPath);
 
     free(returnPath);
@@ -395,11 +426,12 @@ int fs_setcwd(char *pathname){
     return 0;
 }
 
-// removes the direcotry from the parent and frees the blocks 
+// removes the direcotry from the parent and frees the blocks
 // associated with it so they may be reused
-int fs_rmdir(const char *pathname){
+int fs_rmdir(const char *pathname)
+{
     ppRetStruct ppInfo;
-    int res = parsePath(pathname,&ppInfo);
+    int res = parsePath(pathname, &ppInfo);
 
     if (res == -1)
     {
@@ -420,9 +452,8 @@ int fs_rmdir(const char *pathname){
     DE *rmDir = &ppInfo.Parent[ppInfo.lastElementIndex];
     int blockNum = rmDir[0].loc;
     int numBlocks = (rmDir[0].size + vcb->blockSize - 1) / vcb->blockSize;
-    //free the blocks on freemap so that they can be reused;
+    // free the blocks on freemap so that they can be reused;
     freeBlocks(blockNum, numBlocks);
-
 
     strcpy(rmDir->name, "");
     rmDir->size = 0;
@@ -437,14 +468,15 @@ int fs_rmdir(const char *pathname){
     parentDir[1].loc = ppInfo.Parent[1].loc;
     parentDir[1].size = ppInfo.Parent[1].size;
     writeDir(parentDir);
-
 }
 
-int fs_isFile(char *filename){
+int fs_isFile(char *filename)
+{
     ppRetStruct ppInfo;
 
-    int res = parsePath(filename,&ppInfo);
-    if(res ==-1){
+    int res = parsePath(filename, &ppInfo);
+    if (res == -1)
+    {
         return 0;
     }
     if (ppInfo.lastElementIndex == -1)
@@ -454,15 +486,18 @@ int fs_isFile(char *filename){
 
     DE *de = &ppInfo.Parent[ppInfo.lastElementIndex];
     //  isDir 0 means file & 1 means directory
-    if(de->isDir == 0){
+    if (de->isDir == 0)
+    {
         return 1;
-    }else{
+    }
+    else
+    {
         return 0;
     }
-    
 }
 
-int fs_isDir(char *pathname){
+int fs_isDir(char *pathname)
+{
 
     ppRetStruct ppInfo;
 
@@ -498,15 +533,17 @@ int fs_delete(char *filename)
     {
         return -1;
     }
-    if(ppInfo.lastElementIndex == -1){
+    if (ppInfo.lastElementIndex == -1)
+    {
         return -1;
     }
-    //makes sure it is a file
-    if(ppInfo.Parent[ppInfo.lastElementIndex].isDir == 1){
+    // makes sure it is a file
+    if (ppInfo.Parent[ppInfo.lastElementIndex].isDir == 1)
+    {
         return -1;
     }
 
-    DE * de = &ppInfo.Parent[ppInfo.lastElementIndex];
+    DE *de = &ppInfo.Parent[ppInfo.lastElementIndex];
 
     int numBlocks = (de->size + vcb->blockSize - 1) / vcb->blockSize;
     freeBlocks(de->loc, numBlocks);
@@ -542,7 +579,7 @@ fdDir *fs_opendir(const char *pathname)
     fdDir *dirp = (fdDir *)malloc(sizeof(fdDir));
     if (dirp == NULL)
     {
-        return NULL; 
+        return NULL;
     }
 
     dirp->d_reclen = sizeof(struct fs_diriteminfo);
@@ -551,43 +588,49 @@ fdDir *fs_opendir(const char *pathname)
 
     if (dirp->directory == NULL)
     {
-        free(dirp); 
+        free(dirp);
         return NULL;
     }
     dirp->di = (struct fs_diriteminfo *)malloc(sizeof(struct fs_diriteminfo));
     if (dirp->di == NULL)
     {
-        free(dirp->directory); 
-        free(dirp);           
-        return NULL;          
+        free(dirp->directory);
+        free(dirp);
+        return NULL;
     }
 
     return dirp;
 }
 
 // this reads and returns the next occupied DE from the directory
-struct fs_diriteminfo *fs_readdir(fdDir *dirp){
-    if(dirp == NULL){
+struct fs_diriteminfo *fs_readdir(fdDir *dirp)
+{
+    if (dirp == NULL)
+    {
         return NULL;
     }
-    if(dirp->directory == NULL){
+    if (dirp->directory == NULL)
+    {
         return NULL;
     }
 
     DE *dir = dirp->directory;
 
-    if(dirp->dirEntryPosition >= MAX_ENTRIES){
+    if (dirp->dirEntryPosition >= MAX_ENTRIES)
+    {
         return NULL;
     }
-    while(strcmp(dir[dirp->dirEntryPosition].name,"")==0){
-        if(dirp->dirEntryPosition>=MAX_ENTRIES){
+    while (strcmp(dir[dirp->dirEntryPosition].name, "") == 0)
+    {
+        if (dirp->dirEntryPosition >= MAX_ENTRIES)
+        {
             return NULL;
         }
         dirp->dirEntryPosition++;
     }
 
-    struct fs_diriteminfo * diriteminfo = dirp->di;
-    strcpy(diriteminfo->d_name,dir[dirp->dirEntryPosition].name);
+    struct fs_diriteminfo *diriteminfo = dirp->di;
+    strcpy(diriteminfo->d_name, dir[dirp->dirEntryPosition].name);
     diriteminfo->d_reclen = dir[dirp->dirEntryPosition].size;
     diriteminfo->fileType = dir[dirp->dirEntryPosition].isDir;
 
@@ -595,15 +638,18 @@ struct fs_diriteminfo *fs_readdir(fdDir *dirp){
     return diriteminfo;
 }
 
-
-int fs_closedir(fdDir *dirp){
-    if(dirp ==NULL){
+int fs_closedir(fdDir *dirp)
+{
+    if (dirp == NULL)
+    {
         return -1;
     }
-    if(dirp->directory){
+    if (dirp->directory)
+    {
         free(dirp->directory);
     }
-    if(dirp->di){
+    if (dirp->di)
+    {
         free(dirp->di);
     }
     free(dirp);
@@ -657,14 +703,17 @@ int fs_move(char *srcPath, char *destPath)
     return 0;
 }
 
-int fs_stat(const char *path, struct fs_stat *buf){
+int fs_stat(const char *path, struct fs_stat *buf)
+{
 
     ppRetStruct ppInfo;
     int res = parsePath(path, &ppInfo);
-    if(res == -1){
+    if (res == -1)
+    {
         return -1;
     }
-    if(ppInfo.lastElementIndex == -1){
+    if (ppInfo.lastElementIndex == -1)
+    {
         return -1;
     }
 
