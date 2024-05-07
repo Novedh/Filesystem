@@ -28,24 +28,22 @@
 #include "bitMap.h"
 #include "global.h"
 
-#define SIGNATURE 0x41444f4a353134 // 415JODA
+// File System Volume Signature '415JODA'
+#define SIGNATURE 0x41444f4a353134
 
 VCB *vcb;
 
-// TODO: Define Directory Entry (DE) Struct
-
-// TODO: Write init rootDirectory
-// Return starting block number of root directory
-
+// Initialize File System with numBlocks and blockSize
 int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
 {
     printf("Initializing File System with %ld blocks with a block size of %ld\n", numberOfBlocks,
            blockSize);
-    /* TODO: Add any code you need to initialize your file system. */
 
+    // Read in the Volume Control Block to check values
     vcb = malloc(blockSize);
     LBAread(vcb, 1, 0);
 
+    // Check if the File System is already initialized
     if (vcb->signature == SIGNATURE)
     {
         printf("Volume already initialized! \n");
@@ -54,6 +52,7 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
         return 0;
     }
 
+    // Setup VCB
     vcb->signature = SIGNATURE;
     vcb->numberOfBlocks = numberOfBlocks;
     vcb->blockSize = blockSize;
@@ -67,6 +66,7 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
     return 0;
 }
 
+// Exit File System
 void exitFileSystem()
 {
     exitFreeMap();
