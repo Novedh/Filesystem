@@ -8,7 +8,7 @@
  *
  * File:: bitMap.c
  *
- * Description:: functions in charge of the functions of our bitmap
+ * Description:: Functions in charge of the functions of our bitmap
  * such as seting, clearing, geting bits and initaliazing our bitmap.
  *
  **************************************************************/
@@ -25,22 +25,28 @@
 // to check hexdump Hexdump/hexdump.linuxM1 SampleVolume --start 2 --count 5
 unsigned char *freeSpaceMap;
 
+// Load the free space map into memory
 void loadFSM()
 {
+    // If the free space is already allocated, free it
     if (freeSpaceMap != NULL)
     {
         free(freeSpaceMap);
         freeSpaceMap = NULL;
     }
 
+    // Allocate memory for the map
     freeSpaceMap = calloc(5, vcb->blockSize);
     if (freeSpaceMap == NULL)
     {
         printf("failed to load Free map.\n");
     }
+
+    // Read the free space map from storage to memory
     LBAread(freeSpaceMap, vcb->freeSize, 1);
 }
 
+// Set a bit in the free space map, marking the block it represents as used
 void setBit(int blockNum)
 {
     int byteNum = blockNum / 8;
@@ -48,6 +54,7 @@ void setBit(int blockNum)
     freeSpaceMap[byteNum] = freeSpaceMap[byteNum] | (1 << bitNum);
 }
 
+// Clear a bit in the free space map, marking the block it represents as free
 void clearBit(int blockNum)
 {
     int byteNum = blockNum / 8;
@@ -55,6 +62,7 @@ void clearBit(int blockNum)
     freeSpaceMap[byteNum] = freeSpaceMap[byteNum] & ~(1 << bitNum);
 }
 
+// Get the value of a bit in the free space map
 int getBit(int blockNum)
 {
     if (freeSpaceMap == NULL)
@@ -70,6 +78,7 @@ int getBit(int blockNum)
     return ((freeSpaceMap[byteNum] >> bitNum) & 1);
 }
 
+// Initialize the free space map
 int initFreeSpaceMap(uint64_t numberOfBlocks, uint64_t blockSize)
 {
     int bytesNeeded = (numberOfBlocks + 7) / 8;
@@ -92,13 +101,16 @@ int initFreeSpaceMap(uint64_t numberOfBlocks, uint64_t blockSize)
     return blocksNeeded;
 }
 
+// Allocate numBlocks
 int allocateBlocks(uint64_t numBlocksRequested)
 {
     uint64_t startFreeBlock = -1;
     uint64_t continuousFreeBlocks = 0;
+
+    // Iterate through all blocks until continuous blocks of free space for request are found
     for (int i = 0; i < vcb->numberOfBlocks; i++)
     {
-        // Find a free block
+        // Check if current block is free
         if (getBit(i) == 0)
         {
 
@@ -113,7 +125,7 @@ int allocateBlocks(uint64_t numBlocksRequested)
             // Found a series of free blocks that matches request
             if (continuousFreeBlocks == numBlocksRequested)
             {
-                // Update BitMap
+                // Mark series as used
                 for (int j = startFreeBlock; j < startFreeBlock + numBlocksRequested; j++)
                 {
                     setBit(j);
@@ -126,7 +138,7 @@ int allocateBlocks(uint64_t numBlocksRequested)
                 return startFreeBlock;
             }
         }
-        // Reset Series
+        // Current block is used, reset tracker
         else
         {
             continuousFreeBlocks = 0;
@@ -136,21 +148,29 @@ int allocateBlocks(uint64_t numBlocksRequested)
     return -1;
 }
 
-// TODO BUT NOT REQUIRED FOR M1: Write release space function
+// Free a series of allocated blocks
 int freeBlocks(int index, int numBlocks)
 {
+
+    // Load freeSpace Map
     LBAread(freeSpaceMap, vcb->freeSize, 1);
+
+    // Index is invalid
     if (index < 1)
     {
         return -1;
     }
+
+    // Mark series of blocks as free
     for (int i = index; i < index + numBlocks; i++)
     {
         clearBit(i);
     }
+
     LBAwrite(freeSpaceMap, vcb->freeSize, 1);
 }
 
+// Update free space map and free from memory
 void exitFreeMap()
 {
     LBAwrite(freeSpaceMap, vcb->freeSize, 1);
