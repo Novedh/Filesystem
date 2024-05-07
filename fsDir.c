@@ -8,7 +8,7 @@
  *
  * File:: fsDir.c
  *
- * Description:: the functions in charge of crating files/directories and
+ * Description:: Functions in charge of crating files/directories and
  * traversing our file system.
  *
  **************************************************************/
@@ -22,15 +22,13 @@
 #include "fsDir.h"
 #include "mfs.h"
 
-// pointer to current directory stored in memory
-
+// Global variables
 DE *root;
 DE *cwd;
 char *cwdString;
 extern VCB *vcb;
 
-// this function will load root from disk back into memory when the FS is restarted
-// and also allocate and set the cwd to root
+// Load the root directory from risk and initialize cwd to root
 void loadRoot()
 {
     int blocksNeeded = ((sizeof(DE) * MAX_ENTRIES) + vcb->blockSize) / vcb->blockSize;
@@ -42,6 +40,7 @@ void loadRoot()
     cwd = root;
 }
 
+// Create a new directory with numEntires
 int createDirectory(int numEntries, DE *parent)
 {
 
@@ -52,21 +51,23 @@ int createDirectory(int numEntries, DE *parent)
     int loc = allocateBlocks(blocksNeeded);
     DE *myDir = (DE *)malloc(bytesNeeded);
 
-    // empty name means unused DE
+    // Initialize directory entires as unused ""
     for (int i = 2; i < actEntries; i++)
     {
         strcpy(myDir[i].name, "");
     }
 
+    // Setup "." points to itself
     strcpy(myDir[0].name, ".");
     myDir[0].size = actEntries * sizeof(DE);
     myDir[0].loc = loc;
     myDir[0].isDir = 1;
 
+    // Setup ".." points to parent
     strcpy(myDir[1].name, "..");
     myDir[1].isDir = 1;
-    // if we are in root
 
+    // If root .. needs to point to itself
     if (parent == NULL)
     {
         myDir[1].loc = myDir[0].loc;
@@ -85,6 +86,7 @@ int createDirectory(int numEntries, DE *parent)
     return loc;
 }
 
+// Create a file with a size in bytes
 int createFile(int fileSize, DE *parent)
 {
 
@@ -97,13 +99,14 @@ int createFile(int fileSize, DE *parent)
     strcpy(myFile->name, "myFile");
     myFile->size = fileSize;
     myFile->loc = loc;
-    myFile->isDir = 0;
+    myFile->isDir = 0; // Not a directory
 
     LBAwrite(myFile, blocksNeeded, loc);
     free(myFile);
     return loc;
 }
 
+// Make a new file given a path and file size in bytes
 int makeFile(char *pathname, int fileSize)
 {
     ppRetStruct ppInfo;
@@ -134,6 +137,7 @@ int makeFile(char *pathname, int fileSize)
     return fileLoc;
 }
 
+// Get a DE based on its file name
 DE *getDEInfo(char *filename)
 {
     ppRetStruct ppInfo;
@@ -156,7 +160,7 @@ DE *getDEInfo(char *filename)
 // note: "." dirIndex[0] points to itself
 // note: ".." direIndex[1] points to prev
 
-// returns the DE location of a file/directory within the directory using its name
+// Find a directory entry within the parent given the entries name
 int findInDir(DE *parent, char *string)
 {
 
@@ -174,7 +178,7 @@ int findInDir(DE *parent, char *string)
     return -1; // not found
 }
 
-// these functions load the directory from disk to memory
+// Load a directory entry from storage into memory using the entry
 DE *loadDir(DE *de)
 {
     if (de == NULL)
@@ -188,6 +192,7 @@ DE *loadDir(DE *de)
     return dir;
 }
 
+// Load a directory entry from storage into memory using the entries location
 DE *loadDirByLoc(int loc)
 {
     if (loc < 0)
@@ -216,7 +221,7 @@ int parsePath(const char *path, ppRetStruct *ppInfo)
     DE *startParent;
     char *pathcpy = strdup(path);
 
-    // means given absolute path
+    // Determine if path is absolute or relative
     if (pathcpy[0] == '/')
     {
         startParent = root;
@@ -225,6 +230,7 @@ int parsePath(const char *path, ppRetStruct *ppInfo)
     {
         startParent = cwd;
     }
+
     DE *parent = startParent;
 
     char *token = strtok(pathcpy, "/");
@@ -279,6 +285,7 @@ int parsePath(const char *path, ppRetStruct *ppInfo)
     free(pathcpy);
 }
 
+// Find an unsed directory entry in a Directory
 int findUnusedDE(DE *dir)
 {
     for (int i = 2; i < MAX_ENTRIES; i++)
@@ -291,6 +298,7 @@ int findUnusedDE(DE *dir)
     return -1; // no free directory entries
 }
 
+// Write directory entry to storage
 void writeDir(DE *de)
 {
     if (de == NULL)
@@ -302,7 +310,7 @@ void writeDir(DE *de)
     LBAwrite(de, blocksNeeded, blockNum);
 }
 
-// makes a new directory and updates the parent directory
+// Makes a new directory and updates the parent directory
 int fs_mkdir(const char *pathname, mode_t mode)
 {
     ppRetStruct ppInfo;
@@ -330,14 +338,14 @@ int fs_mkdir(const char *pathname, mode_t mode)
 
     writeDir(ppInfo.Parent);
 }
-// returns the path that the filesystem is currently on
+// Get the current working directory path
 char *fs_getcwd(char *pathname, size_t size)
 {
     strncpy(pathname, cwdString, size);
     return cwdString;
 }
 
-// for cd, used to change the cwd and update stringcwd
+// For cd, used to change the cwd and update stringcwd
 int fs_setcwd(char *pathname)
 {
     ppRetStruct ppInfo;
@@ -426,7 +434,7 @@ int fs_setcwd(char *pathname)
     return 0;
 }
 
-// removes the direcotry from the parent and frees the blocks
+// Removes the direcotry from the parent and frees the blocks
 // associated with it so they may be reused
 int fs_rmdir(const char *pathname)
 {
@@ -470,6 +478,7 @@ int fs_rmdir(const char *pathname)
     writeDir(parentDir);
 }
 
+// Check if a fileName leads to a file
 int fs_isFile(char *filename)
 {
     ppRetStruct ppInfo;
@@ -496,6 +505,7 @@ int fs_isFile(char *filename)
     }
 }
 
+// Check if a fileName leads to a directory
 int fs_isDir(char *pathname)
 {
 
@@ -523,7 +533,7 @@ int fs_isDir(char *pathname)
     }
 }
 
-// removed the file from parent direcotry and frees blocks associated with it
+// Remove the file from parent direcotry and frees blocks associated with it
 int fs_delete(char *filename)
 {
     ppRetStruct ppInfo;
@@ -558,7 +568,7 @@ int fs_delete(char *filename)
     return 0;
 }
 
-// opens the directory so that it may be read and returns a pointer to that directory
+// Open the directory so that it may be read and returns a pointer to that directory
 fdDir *fs_opendir(const char *pathname)
 {
     ppRetStruct ppInfo;
@@ -602,7 +612,7 @@ fdDir *fs_opendir(const char *pathname)
     return dirp;
 }
 
-// this reads and returns the next occupied DE from the directory
+// Reads and returns the next occupied DE from the directory
 struct fs_diriteminfo *fs_readdir(fdDir *dirp)
 {
     if (dirp == NULL)
@@ -638,6 +648,7 @@ struct fs_diriteminfo *fs_readdir(fdDir *dirp)
     return diriteminfo;
 }
 
+// Close directory
 int fs_closedir(fdDir *dirp)
 {
     if (dirp == NULL)
@@ -656,6 +667,7 @@ int fs_closedir(fdDir *dirp)
     return 0;
 }
 
+// Move a file from source to destination
 int fs_move(char *srcPath, char *destPath)
 {
     ppRetStruct srcppInfo;
