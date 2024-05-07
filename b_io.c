@@ -281,8 +281,11 @@ int b_read(b_io_fd fd, char *buffer, int count)
     }
 
     remainingBytesInMyBuffer = fcbArray[fd].buflen - fcbArray[fd].index;
-
+    
+    // Calculate the amount of data already delivered
     int amountAlreadyDelivered = (fcbArray[fd].currentBlk * B_CHUNK_SIZE);
+    
+    // Adjust the read count if it exceeds the file size
     if ((count + amountAlreadyDelivered) > fcbArray[fd].fi->size)
     {
         count = fcbArray[fd].fi->size - amountAlreadyDelivered;
@@ -292,7 +295,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
             printf("ERROR");
         }
     }
-
+    // Divide the read operation into three parts
     if (remainingBytesInMyBuffer >= count)
     {
         part1 = count;
@@ -310,13 +313,13 @@ int b_read(b_io_fd fd, char *buffer, int count)
 
         part3 = part3 - part2;
     }
-
+    // Read from the buffer
     if (part1 > 0)
     {
         memcpy(buffer, fcbArray[fd].buf + fcbArray[fd].index, part1);
         fcbArray[fd].index = fcbArray[fd].index + part1;
     }
-
+     // Read from blocks
     if (part2 > 0)
     {
         bytesRead = LBAread(buffer + part1, numberOfBlocksToCopy,
@@ -325,7 +328,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
         fcbArray[fd].currentBlk += numberOfBlocksToCopy;
         part2 = bytesRead * B_CHUNK_SIZE;
     }
-
+    // Read remaining bytes
     if (part3 > 0)
     {
         bytesRead = LBAread(fcbArray[fd].buf, 1, fcbArray[fd].currentBlk + fcbArray[fd].fi->loc);
@@ -348,7 +351,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
             fcbArray[fd].index = fcbArray[fd].index + part3;
         }
     }
-
+    // Return the total number of bytes read
     bytesReturned = part1 + part2 + part3;
 
     return (bytesReturned);
